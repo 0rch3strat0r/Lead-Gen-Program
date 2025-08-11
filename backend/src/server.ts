@@ -27,5 +27,13 @@ app.get("/healthz", (_req, res) => res.json({ ok: true, uptime: process.uptime()
 app.use(resolveClientId(process.env.DEFAULT_CLIENT_ID));
 app.use("/api", bearerAuth(process.env.API_TOKEN), jobsRouter);
 
-const port = Number(process.env.PORT || 3000);
-app.listen(port, () => logger.info({ port }, "server started"));
+// Export a handler for Vercel Serverless Functions
+export default function handler(req: any, res: any) {
+  return (app as any)(req, res);
+}
+
+// Only start an HTTP listener when running locally (not on Vercel)
+if (process.env.VERCEL !== "1") {
+  const port = Number(process.env.PORT || 3000);
+  app.listen(port, () => logger.info({ port }, "server started"));
+}
