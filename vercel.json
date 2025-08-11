@@ -6,5 +6,8 @@
   "routes": [
     { "src": "/(.*)", "dest": "backend/src/server.ts" }
   ],
-  "installCommand": "cd backend && npm install"
+  "installCommand": "cd backend && npm install",
+  "functions": {
+    "runtime": "nodejs20.x"
+  }
 }
