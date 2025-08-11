@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Consulting Opportunity Tracker</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:20px;background:#f5f5f5;}
+  .container{max-width:1200px;margin:0 auto;background:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+  h1{color:#0066cc;border-bottom:3px solid #0066cc;padding-bottom:10px;}
+  h2{color:#333;margin-top:30px;}
+  table{width:100%;border-collapse:collapse;margin-top:20px;}
+  th,td{border:1px solid #ddd;padding:12px;text-align:left;}
+  th{background:#0066cc;color:white;}
+  .w2{background:#e8f5e9;}
+  .contract{background:#fff9c4;}
+  .b2b{background:#e3f2fd;}
+  .high{color:#d32f2f;font-weight:bold;}
+  .medium{color:#f57c00;font-weight:bold;}
+  .low{color:#388e3c;font-weight:bold;}
+  input[type="text"],input[type="url"],select,textarea{width:100%;padding:8px;margin:5px 0;border:1px solid #ddd;border-radius:4px;}
+  button{background:#0066cc;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;}
+  button:hover{background:#0052a3;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>AI Consulting Opportunity Tracker</h1>
+
+<h2>Add New Opportunity</h2>
+<form id="oppForm">
+<table>
+<tr>
+  <td><strong>Type:</strong></td>
+  <td>
+    <select id="oppType">
+      <option value="w2">W2 Employment</option>
+      <option value="contract">1099 Contract</option>
+      <option value="b2b">B2B Consulting</option>
+    </select>
+  </td>
+</tr>
+<tr>
+  <td><strong>Company:</strong></td>
+  <td><input type="text" id="company" placeholder="Company Name"></td>
+</tr>
+<tr>
+  <td><strong>Position/Project:</strong></td>
+  <td><input type="text" id="position" placeholder="Role or Project Title"></td>
+</tr>
+<tr>
+  <td><strong>URL:</strong></td>
+  <td><input type="url" id="url" placeholder="https://example.com/job"></td>
+</tr>
+<tr>
+  <td><strong>AI Potential:</strong></td>
+  <td>
+    <select id="aiPotential">
+      <option value="high">High - Perfect for AI takeover</option>
+      <option value="medium">Medium - Good AI opportunities</option>
+      <option value="low">Low - Limited AI potential</option>
+    </select>
+  </td>
+</tr>
+<tr>
+  <td><strong>Key Processes:</strong></td>
+  <td><textarea id="processes" rows="3" placeholder="Manual processes that could be automated"></textarea></td>
+</tr>
+<tr>
+  <td><strong>Industry:</strong></td>
+  <td>
+    <select id="industry">
+      <option value="healthcare">Healthcare</option>
+      <option value="finance">Financial Services</option>
+      <option value="manufacturing">Manufacturing</option>
+      <option value="professional">Professional Services</option>
+      <option value="retail">Retail/E-commerce</option>
+      <option value="other">Other</option>
+    </select>
+  </td>
+</tr>
+<tr>
+  <td><strong>Est. Value:</strong></td>
+  <td><input type="text" id="value" placeholder="$150K/year or $500K project"></td>
+</tr>
+<tr>
+  <td><strong>Status:</strong></td>
+  <td>
+    <select id="status">
+      <option value="new">New - To Review</option>
+      <option value="analyzing">Analyzing</option>
+      <option value="applied">Applied/Contacted</option>
+      <option value="interviewing">Interviewing</option>
+      <option value="won">Won</option>
+      <option value="lost">Lost</option>
+    </select>
+  </td>
+</tr>
+<tr>
+  <td><strong>Notes:</strong></td>
+  <td><textarea id="notes" rows="3" placeholder="Additional notes"></textarea></td>
+</tr>
+</table>
+<button type="submit">Add Opportunity</button>
+</form>
+
+<h2>Current Opportunities</h2>
+<div id="oppList">
+<table>
+<thead>
+<tr>
+  <th>Type</th>
+  <th>Company</th>
+  <th>Position/Project</th>
+  <th>AI Potential</th>
+  <th>Industry</th>
+  <th>Value</th>
+  <th>Status</th>
+  <th>Actions</th>
+</tr>
+</thead>
+<tbody id="oppTableBody">
+<!-- Opportunities will be added here -->
+</tbody>
+</table>
+</div>
+
+<h2>Summary Statistics</h2>
+<div id="stats">
+<table>
+<tr>
+  <th>Metric</th>
+  <th>Count</th>
+  <th>Potential Value</th>
+</tr>
+<tr>
+  <td>W2 Opportunities</td>
+  <td id="w2Count">0</td>
+  <td id="w2Value">$0</td>
+</tr>
+<tr>
+  <td>1099 Contracts</td>
+  <td id="contractCount">0</td>
+  <td id="contractValue">$0</td>
+</tr>
+<tr>
+  <td>B2B Projects</td>
+  <td id="b2bCount">0</td>
+  <td id="b2bValue">$0</td>
+</tr>
+<tr>
+  <td><strong>Total Pipeline</strong></td>
+  <td id="totalCount">0</td>
+  <td id="totalValue">$0</td>
+</tr>
+</table>
+</div>
+
+</div>
+
+<script>
+// Simple local storage based tracker
+let opportunities = JSON.parse(localStorage.getItem('aiOpportunities') || '[]');
+
+function saveOpportunities() {
+  localStorage.setItem('aiOpportunities', JSON.stringify(opportunities));
+}
+
+function addOpportunity(e) {
+  e.preventDefault();
+  const opp = {
+    id: Date.now(),
+    type: document.getElementById('oppType').value,
+    company: document.getElementById('company').value,
+    position: document.getElementById('position').value,
+    url: document.getElementById('url').value,
+    aiPotential: document.getElementById('aiPotential').value,
+    processes: document.getElementById('processes').value,
+    industry: document.getElementById('industry').value,
+    value: document.getElementById('value').value,
+    status: document.getElementById('status').value,
+    notes: document.getElementById('notes').value,
+    dateAdded: new Date().toLocaleDateString()
+  };
+  opportunities.push(opp);
+  saveOpportunities();
+  document.getElementById('oppForm').reset();
+  renderOpportunities();
+}
+
+function deleteOpportunity(id) {
+  opportunities = opportunities.filter(o => o.id !== id);
+  saveOpportunities();
+  renderOpportunities();
+}
+
+function renderOpportunities() {
+  const tbody = document.getElementById('oppTableBody');
+  tbody.innerHTML = '';
+  
+  opportunities.forEach(opp => {
+    const row = tbody.insertRow();
+    row.className = opp.type;
+    row.innerHTML = `
+      <td>${opp.type.toUpperCase()}</td>
+      <td>${opp.company}</td>
+      <td><a href="${opp.url}" target="_blank">${opp.position}</a></td>
+      <td class="${opp.aiPotential}">${opp.aiPotential.toUpperCase()}</td>
+      <td>${opp.industry}</td>
+      <td>${opp.value}</td>
+      <td>${opp.status}</td>
+      <td><button onclick="deleteOpportunity(${opp.id})">Delete</button></td>
+    `;
+  });
+  
+  updateStats();
+}
+
+function updateStats() {
+  const stats = {
+    w2: { count: 0, value: 0 },
+    contract: { count: 0, value: 0 },
+    b2b: { count: 0, value: 0 }
+  };
+  
+  opportunities.forEach(opp => {
+    stats[opp.type].count++;
+    // Extract numeric value from string like "$150K" or "$500,000"
+    const numValue = parseFloat(opp.value.replace(/[$,K]/gi, '')) * (opp.value.includes('K') ? 1000 : 1);
+    if (!isNaN(numValue)) {
+      stats[opp.type].value += numValue;
+    }
+  });
+  
+  document.getElementById('w2Count').textContent = stats.w2.count;
+  document.getElementById('w2Value').textContent = '$' + stats.w2.value.toLocaleString();
+  document.getElementById('contractCount').textContent = stats.contract.count;
+  document.getElementById('contractValue').textContent = '$' + stats.contract.value.toLocaleString();
+  document.getElementById('b2bCount').textContent = stats.b2b.count;
+  document.getElementById('b2bValue').textContent = '$' + stats.b2b.value.toLocaleString();
+  document.getElementById('totalCount').textContent = stats.w2.count + stats.contract.count + stats.b2b.count;
+  document.getElementById('totalValue').textContent = '$' + (stats.w2.value + stats.contract.value + stats.b2b.value).toLocaleString();
+}
+
+document.getElementById('oppForm').addEventListener('submit', addOpportunity);
+renderOpportunities();
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+# Node / build
+node_modules/
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Reference / archive
+_reference/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.log
+
+# Dependency locks (optional if you want to regenerate)
+package-lock.json
+yarn.lock
+
+# IDE settings
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Production builds
+.next/
+out/
+.vercel/
+
+# Testing
+coverage/
+.nyc_output/

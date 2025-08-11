@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Opportunity Command Center</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+/* EXECUTIVE DESIGN SYSTEM */
+:root {
+  --primary: #1a237e;
+  --secondary: #0066cc;
+  --success: #00c853;
+  --warning: #ff6f00;
+  --danger: #d32f2f;
+  --platinum: #6a1b9a;
+  --gold: #ffc107;
+  --dark-bg: #0a0e27;
+  --light-bg: #ffffff;
+  --dark-panel: #1e2139;
+  --light-panel: #f5f7fa;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: var(--dark-bg);
+  color: #ffffff;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+}
+
+body.light-mode {
+  background: var(--light-bg);
+  color: #333;
+}
+
+/* HEADER & NAVIGATION */
+.header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.header-content {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ribbon {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.ribbon a {
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  background: rgba(255,255,255,0.1);
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.ribbon a:hover, .ribbon a.active {
+  background: rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+
+/* MAIN DASHBOARD */
+.dashboard {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+.hero-section {
+  background: var(--dark-panel);
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+body.light-mode .hero-section {
+  background: var(--light-panel);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.run-search-btn {
+  background: linear-gradient(135deg, var(--success) 0%, #00e676 100%);
+  color: white;
+  border: none;
+  padding: 20px 60px;
+  font-size: 24px;
+  font-weight: bold;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0,200,83,0.3);
+  margin: 20px 0;
+}
+
+.run-search-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(0,200,83,0.4);
+}
+
+.run-search-btn:active {
+  transform: translateY(0);
+}
+
+/* STATS CARDS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: var(--dark-panel);
+  border-radius: 15px;
+  padding: 25px;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+body.light-mode .stat-card {
+  background: white;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--secondary);
+}
+
+.stat-value {
+  font-size: 42px;
+  font-weight: bold;
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--success) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #999;
+  margin-top: 5px;
+}
+
+/* OPPORTUNITIES TABLE */
+.opportunities-section {
+  background: var(--dark-panel);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+body.light-mode .opportunities-section {
+  background: white;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filters {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-input, .filter-select {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: var(--dark-bg);
+  color: white;
+}
+
+body.light-mode .filter-input, body.light-mode .filter-select {
+  background: white;
+  color: #333;
+  border-color: #ddd;
+}
+
+.opportunities-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.opportunities-table th {
+  background: var(--primary);
+  color: white;
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.opportunities-table td {
+  padding: 15px;
+  border-bottom: 1px solid #333;
+}
+
+body.light-mode .opportunities-table td {
+  border-bottom: 1px solid #eee;
+}
+
+.company-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.company-name {
+  font-weight: bold;
+  font-size: 16px;
+  color: var(--secondary);
+}
+
+.company-desc {
+  font-size: 12px;
+  color: #999;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.badge-direct {
+  background: rgba(33, 150, 243, 0.2);
+  color: #2196f3;
+}
+
+.badge-partner {
+  background: rgba(156, 39, 176, 0.2);
+  color: #9c27b0;
+}
+
+.badge-merged {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.score-badge {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.score-high { color: var(--success); }
+.score-medium { color: var(--warning); }
+.score-low { color: var(--danger); }
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: var(--secondary);
+  color: white;
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-warning {
+  background: var(--warning);
+  color: white;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* PIPELINE VISUALIZATION */
+.pipeline-section {
+  background: var(--dark-panel);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+body.light-mode .pipeline-section {
+  background: white;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.pipeline-stages {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  position: relative;
+}
+
+.pipeline-stages::before {
+  content: '';
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #444;
+  z-index: 0;
+}
+
+.stage {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.stage-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--dark-bg);
+  border: 4px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  font-size: 24px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.stage.active .stage-circle {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+  box-shadow: 0 0 20px rgba(0,200,83,0.5);
+}
+
+/* CHARTS */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.chart-container {
+  background: var(--dark-panel);
+  border-radius: 20px;
+  padding: 30px;
+  height: 400px;
+}
+
+body.light-mode .chart-container {
+  background: white;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background: var(--dark-panel);
+  max-width: 1200px;
+  margin: 50px auto;
+  padding: 40px;
+  border-radius: 20px;
+  position: relative;
+}
+
+body.light-mode .modal-content {
+  background: white;
+}
+
+.close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 30px;
+  cursor: pointer;
+  color: #999;
+}
+
+/* GUIDE PREVIEW */
+.guide-preview {
+  background: #f9f9f9;
+  border-radius: 10px;
+  padding: 30px;
+  margin-top: 20px;
+  color: #333;
+}
+
+/* LOADING ANIMATION */
+.loading {
+  display: none;
+  text-align: center;
+  padding: 50px;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--secondary);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .ribbon {
+    display: none;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .pipeline-stages {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .pipeline-stages::before {
+    display: none;
+  }
+  
+  .opportunities-table {
+    font-size: 14px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+/* DARK MODE TOGGLE */
+.theme-toggle {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: white;
+  font-size: 20px;
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease;
+}
+
+/* NOTIFICATION SYSTEM */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--success);
+  color: white;
+  padding: 15px 25px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  display: none;
+  z-index: 2000;
+}
+
+.notification.show {
+  display: block;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER NAVIGATION -->
+<header class="header">
+  <div class="header-content">
+    <div class="logo">
+      <span>🚀</span>
+      <span>AI Opportunity Command Center</span>
+    </div>
+    <nav class="ribbon">
+      <a href="#dashboard" class="active">Dashboard</a>
+      <a href="#opportunities">Opportunities</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#reports">Analytics</a>
+      <a href="#guides">Guides</a>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </nav>
+  </div>
+</header>
+
+<!-- MAIN DASHBOARD -->
+<div class="dashboard">
+  
+  <!-- HERO SECTION -->
+  <div class="hero-section fade-in">
+    <h1 style="font-size: 36px; margin-bottom: 10px;">AI Automation Opportunity Intelligence System</h1>
+    <p style="color: #999; margin-bottom: 30px;">Automated lead discovery, scoring, and guide generation</p>
+    
+    <button class="run-search-btn" onclick="runAutomatedSearch()">
+      🔍 Run Automated Search
+    </button>
+    
+    <div id="searchStatus" style="margin-top: 20px; color: #999;"></div>
+    
+    <div class="loading" id="loadingIndicator">
+      <div class="loading-spinner"></div>
+      <p style="margin-top: 20px;">Searching job boards and enriching data...</p>
+    </div>
+  </div>
+  
+  <!-- STATS OVERVIEW -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="totalOpportunities">41</div>
+      <div class="stat-label">Total Opportunities</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="pipelineValue">$72.8M</div>
+      <div class="stat-label">Pipeline Value</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="partnerMultiplier">190x</div>
+      <div class="stat-label">Partner Multiplier</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="activeDeals">12</div>
+      <div class="stat-label">Active Deals</div>
+    </div>
+  </div>
+  
+  <!-- OPPORTUNITIES TABLE -->
+  <div class="opportunities-section" id="opportunities">
+    <div class="section-header">
+      <h2 style="font-size: 28px;">🎯 Opportunities</h2>
+      <div class="filters">
+        <input type="text" class="filter-input" placeholder="Search companies..." onkeyup="filterOpportunities()">
+        <select class="filter-select" onchange="filterOpportunities()">
+          <option value="all">All Types</option>
+          <option value="direct">Direct</option>
+          <option value="partner">Partner</option>
+          <option value="merged">Merged</option>
+        </select>
+        <select class="filter-select" onchange="filterOpportunities()">
+          <option value="all">All Stages</option>
+          <option value="discovered">Discovered</option>
+          <option value="qualified">Qualified</option>
+          <option value="contacted">Contacted</option>
+          <option value="proposal">Proposal</option>
+        </select>
+      </div>
+    </div>
+    
+    <table class="opportunities-table">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Type</th>
+          <th>Score</th>
+          <th>Value</th>
+          <th>Stage</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="opportunitiesTableBody">
+        <!-- Populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- PIPELINE VISUALIZATION -->
+  <div class="pipeline-section" id="pipeline">
+    <h2 style="font-size: 28px; margin-bottom: 20px;">📈 Pipeline Stages</h2>
+    <div class="pipeline-stages">
+      <div class="stage active">
+        <div class="stage-circle">41</div>
+        <div>Discovered</div>
+        <div style="color: #999; font-size: 14px;">$72.8M</div>
+      </div>
+      <div class="stage active">
+        <div class="stage-circle">28</div>
+        <div>Qualified</div>
+        <div style="color: #999; font-size: 14px;">$51.2M</div>
+      </div>
+      <div class="stage active">
+        <div class="stage-circle">12</div>
+        <div>Contacted</div>
+        <div style="color: #999; font-size: 14px;">$28.5M</div>
+      </div>
+      <div class="stage">
+        <div class="stage-circle">5</div>
+        <div>Proposal</div>
+        <div style="color: #999; font-size: 14px;">$12.8M</div>
+      </div>
+      <div class="stage">
+        <div class="stage-circle">2</div>
+        <div>Negotiation</div>
+        <div style="color: #999; font-size: 14px;">$4.1M</div>
+      </div>
+      <div class="stage">
+        <div class="stage-circle">0</div>
+        <div>Closed Won</div>
+        <div style="color: #999; font-size: 14px;">$0</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ANALYTICS CHARTS -->
+  <div class="charts-grid" id="reports">
+    <div class="chart-container">
+      <h3>Opportunity Distribution</h3>
+      <canvas id="opportunityChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Pipeline Velocity</h3>
+      <canvas id="velocityChart"></canvas>
+    </div>
+  </div>
+  
+</div>
+
+<!-- OPPORTUNITY DETAIL MODAL -->
+<div class="modal" id="opportunityModal">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeModal()">&times;</span>
+    <div id="modalContent">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification"></div>
+
+<script>
+// COMPLETE DATA - All 20 existing opportunities plus 15 found
+let opportunities = [
+  // TOP 15 NEW OPPORTUNITIES FOUND
+  {
+    id: 1,
+    company: "Cafe Rio",
+    description: "139 AP Clerk positions across 130+ locations",
+    type: "direct",
+    score: 85,
+    value: 6900000,
+    displayValue: "$6.9M",
+    stage: "discovered",
+    industry: "Restaurant/Food Service",
+    contacts: {
+      cfo: "Search LinkedIn for CFO",
+      linkedin: "https://www.linkedin.com/company/cafe-rio/",
+      website: "https://www.caferio.com"
+    },
+    jobUrl: "https://www.indeed.com/viewjob?jk=123456",
+    painPoints: [
+      "Multi-location invoice processing",
+      "High volume vendor payments",
+      "Food cost reconciliation",
+      "Franchise vs corporate complexity"
+    ],
+    outreachScript: "Hi [Name], I noticed Cafe Rio is hiring 139 AP clerks across your 130+ locations. That's roughly $6.9M annually. What if one AI system could handle all invoice processing with 99% accuracy while providing real-time food cost analytics?",
+    environmentalAngle: "Reduce paper usage by 95% across all locations - save 2.5 tons of paper annually",
+    guideCreated: false
+  },
+  {
+    id: 2,
+    company: "Valley Behavioral Health",
+    description: "Healthcare billing and AP automation opportunity",
+    type: "direct",
+    score: 78,
+    value: 200000,
+    displayValue: "$200K",
+    stage: "discovered",
+    industry: "Healthcare",
+    contacts: {
+      cfo: "Revenue Cycle Director",
+      linkedin: "https://www.linkedin.com/company/valley-behavioral-health/",
+      website: "https://www.valleybehavioral.com"
+    },
+    painPoints: [
+      "HIPAA compliance requirements",
+      "Insurance claim processing",
+      "Multi-payer reconciliation",
+      "Billing error reduction"
+    ],
+    outreachScript: "Hi [Name], Healthcare billing complexity is costing you time and accuracy. Our HIPAA-compliant AI can reduce billing errors by 95% while accelerating cash flow by 30 days.",
+    environmentalAngle: "Digital-first approach aligns with healthcare sustainability initiatives",
+    guideCreated: false
+  },
+  {
+    id: 3,
+    company: "Telarus",
+    description: "Reporting Analysts - Excel automation opportunity",
+    type: "direct",
+    score: 82,
+    value: 350000,
+    displayValue: "$350K",
+    stage: "discovered",
+    industry: "Technology Services",
+    guideCreated: false
+  },
+  {
+    id: 4,
+    company: "ChannelBound LLC",
+    description: "ACA Reporting Specialist - Compliance automation",
+    type: "direct",
+    score: 75,
+    value: 250000,
+    displayValue: "$250K",
+    stage: "discovered",
+    industry: "Benefits Technology",
+    guideCreated: false
+  },
+  {
+    id: 5,
+    company: "Associated Food Stores",
+    description: "Multiple AP positions - wholesale automation",
+    type: "direct",
+    score: 79,
+    value: 450000,
+    displayValue: "$450K",
+    stage: "discovered",
+    industry: "Food Distribution",
+    guideCreated: false
+  },
+  {
+    id: 6,
+    company: "Les Olson Company",
+    description: "Order Processing - SalesForce to SalesPad integration",
+    type: "direct",
+    score: 72,
+    value: 180000,
+    displayValue: "$180K",
+    stage: "discovered",
+    industry: "Office Solutions",
+    guideCreated: false
+  },
+  {
+    id: 7,
+    company: "ICU Medical",
+    description: "Order Processing and inventory automation",
+    type: "direct",
+    score: 74,
+    value: 220000,
+    displayValue: "$220K",
+    stage: "discovered",
+    industry: "Medical Devices",
+    guideCreated: false
+  },
+  {
+    id: 8,
+    company: "CallTower",
+    description: "Remote Billing & Collection - Self-service automation",
+    type: "direct",
+    score: 77,
+    value: 280000,
+    displayValue: "$280K",
+    stage: "discovered",
+    industry: "Telecom/SaaS",
+    guideCreated: false
+  },
+  {
+    id: 9,
+    company: "Multiple Healthcare Providers",
+    description: "Data Entry Specialists - EMR automation",
+    type: "direct",
+    score: 80,
+    value: 1200000,
+    displayValue: "$1.2M",
+    stage: "discovered",
+    industry: "Healthcare",
+    guideCreated: false
+  },
+  {
+    id: 10,
+    company: "Bank Reconciliation (136 positions)",
+    description: "Financial reconciliation automation across multiple banks",
+    type: "direct",
+    score: 83,
+    value: 5400000,
+    displayValue: "$5.4M",
+    stage: "discovered",
+    industry: "Financial Services",
+    guideCreated: false
+  },
+  {
+    id: 11,
+    company: "Customer Service Centers",
+    description: "381 CSR positions - AI chatbot opportunity",
+    type: "direct",
+    score: 81,
+    value: 15200000,
+    displayValue: "$15.2M",
+    stage: "discovered",
+    industry: "Various",
+    guideCreated: false
+  },
+  {
+    id: 12,
+    company: "IT Help Desk Companies",
+    description: "Level 1 support automation - password resets",
+    type: "direct",
+    score: 76,
+    value: 890000,
+    displayValue: "$890K",
+    stage: "discovered",
+    industry: "Technology",
+    guideCreated: false
+  },
+  {
+    id: 13,
+    company: "Manufacturing Inventory",
+    description: "427 inventory control positions in Utah",
+    type: "direct",
+    score: 78,
+    value: 17100000,
+    displayValue: "$17.1M",
+    stage: "discovered",
+    industry: "Manufacturing",
+    guideCreated: false
+  },
+  {
+    id: 14,
+    company: "Healthcare Scheduling",
+    description: "Scheduling Coordinator automation",
+    type: "direct",
+    score: 79,
+    value: 650000,
+    displayValue: "$650K",
+    stage: "discovered",
+    industry: "Healthcare",
+    guideCreated: false
+  },
+  {
+    id: 15,
+    company: "Data Aggregation Analysts",
+    description: "High-value analytics automation - Telarus and similar",
+    type: "direct",
+    score: 88,
+    value: 2100000,
+    displayValue: "$2.1M",
+    stage: "discovered",
+    industry: "Technology",
+    guideCreated: false
+  },
+  
+  // YOUR 20 EXISTING COMPANY GUIDES
+  {
+    id: 21,
+    company: "RainFocus",
+    description: "Event platform AI enhancement - Solutions Consultant",
+    type: "direct",
+    score: 75,
+    value: 850000,
+    displayValue: "$850K",
+    stage: "qualified",
+    industry: "Event Technology",
+    painPoints: [
+      "Event data analytics",
+      "Attendee engagement tracking",
+      "Multi-event reporting",
+      "Integration complexity"
+    ],
+    outreachScript: "Transform your event platform with AI that predicts attendee behavior and optimizes engagement in real-time.",
+    guideCreated: true,
+    guideUrl: "/RainFocus_Solutions_Consultant_Guide.html"
+  },
+  {
+    id: 22,
+    company: "Mountain America Credit Union",
+    description: "CRM Solutions Architect - Member experience AI",
+    type: "direct",
+    score: 72,
+    value: 950000,
+    displayValue: "$950K",
+    stage: "qualified",
+    industry: "Financial Services",
+    painPoints: [
+      "Member experience personalization",
+      "Cross-sell optimization",
+      "Service automation",
+      "Compliance tracking"
+    ],
+    environmentalAngle: "Reduce branch traffic by 40% - lower carbon footprint",
+    guideCreated: true,
+    guideUrl: "/Mountain_America_Credit_Union_CRM_Solutions_Architect_Guide.html"
+  },
+  {
+    id: 23,
+    company: "SS&C Salentica",
+    description: "CRM Solutions Consultant - Wealth management automation",
+    type: "direct",
+    score: 73,
+    value: 750000,
+    displayValue: "$750K",
+    stage: "qualified",
+    industry: "Wealth Management",
+    guideCreated: true,
+    guideUrl: "/SSC_Salentica_CRM_Solutions_Consultant_Guide.html"
+  },
+  {
+    id: 24,
+    company: "Silac Insurance Services",
+    description: "Solutions Architect - Insurance tech automation",
+    type: "direct",
+    score: 71,
+    value: 680000,
+    displayValue: "$680K",
+    stage: "qualified",
+    industry: "Insurance",
+    guideCreated: true,
+    guideUrl: "/Silac_Insurance_Solutions_Architect_Guide.html"
+  },
+  {
+    id: 25,
+    company: "Zions Bancorporation",
+    description: "Salesforce Solutions Architect - Banking automation",
+    type: "direct",
+    score: 76,
+    value: 1100000,
+    displayValue: "$1.1M",
+    stage: "qualified",
+    industry: "Banking",
+    environmentalAngle: "Digital banking reduces paper by 80%, supports ESG goals",
+    guideCreated: true,
+    guideUrl: "/Zions_Bancorp_Salesforce_Solutions_Architect_Guide.html"
+  },
+  {
+    id: 26,
+    company: "RLDatix",
+    description: "Sales Engineer - Healthcare safety platform AI",
+    type: "direct",
+    score: 77,
+    value: 920000,
+    displayValue: "$920K",
+    stage: "discovered",
+    industry: "Healthcare Technology",
+    guideCreated: true,
+    guideUrl: "/RLDatix_Sales_Engineer_Guide.html"
+  },
+  {
+    id: 27,
+    company: "Coesia-Flexlink",
+    description: "Sales Engineer - Manufacturing automation AI",
+    type: "direct",
+    score: 74,
+    value: 875000,
+    displayValue: "$875K",
+    stage: "discovered",
+    industry: "Manufacturing",
+    environmentalAngle: "AI optimization reduces energy consumption by 25%",
+    guideCreated: true,
+    guideUrl: "/Coesia_Flexlink_Sales_Engineer_Guide.html"
+  },
+  {
+    id: 28,
+    company: "Fuchs Lubricants",
+    description: "Sales Service Engineer - Predictive maintenance AI",
+    type: "direct",
+    score: 75,
+    value: 750000,
+    displayValue: "$750K",
+    stage: "discovered",
+    industry: "Industrial",
+    environmentalAngle: "Extend equipment life 40%, reduce lubricant waste 30%",
+    guideCreated: true,
+    guideUrl: "/Fuchs_Lubricants_Sales_Service_Engineer_Guide.html"
+  },
+  {
+    id: 29,
+    company: "Salesforce",
+    description: "Pre-Sales Consultant Admin - Platform AI enhancement",
+    type: "direct",
+    score: 80,
+    value: 1100000,
+    displayValue: "$1.1M",
+    stage: "qualified",
+    industry: "Technology",
+    guideCreated: true,
+    guideUrl: "/Salesforce_Pre_Sales_Consultant_Admin_Guide.html"
+  },
+  {
+    id: 30,
+    company: "Deloitte",
+    description: "Dynamics CRM Consultant - Big 4 enterprise partner",
+    type: "partner",
+    score: 92,
+    value: 10000000,
+    displayValue: "$10M+ (50x)",
+    stage: "qualified",
+    industry: "Professional Services",
+    partnerTier: "platinum",
+    multiplier: 50,
+    contacts: {
+      partner: "CRM Practice Lead",
+      linkedin: "https://www.linkedin.com/company/deloitte/"
+    },
+    painPoints: [
+      "Scale AI across Fortune 500 clients",
+      "Standardize implementation methodology",
+      "Reduce project timelines",
+      "Improve consultant productivity"
+    ],
+    outreachScript: "Partner with us to bring AI-powered CRM transformations to your Fortune 500 clients, reducing implementation time by 60%.",
+    guideCreated: true,
+    guideUrl: "/Deloitte_Dynamics_CRM_Consultant_Guide.html"
+  },
+  {
+    id: 31,
+    company: "Mashura Consulting",
+    description: "Veterinary Implementation Consultant - Practice management AI",
+    type: "direct",
+    score: 70,
+    value: 425000,
+    displayValue: "$425K",
+    stage: "discovered",
+    industry: "Veterinary",
+    environmentalAngle: "Paperless practice reduces waste, improves hygiene",
+    guideCreated: true,
+    guideUrl: "/Mashura_Veterinary_Implementation_Consultant_Guide.html"
+  },
+  {
+    id: 32,
+    company: "PwC",
+    description: "Oracle Field Service Consultant - Big 4 field service AI",
+    type: "partner",
+    score: 90,
+    value: 8500000,
+    displayValue: "$8.5M (50x)",
+    stage: "discovered",
+    industry: "Professional Services",
+    partnerTier: "platinum",
+    multiplier: 50,
+    guideCreated: true,
+    guideUrl: "/PwC_Oracle_Field_Service_Consultant_Guide.html"
+  },
+  {
+    id: 33,
+    company: "Red Pepper Software",
+    description: "Sr Technical Implementation - Qualtrics XM automation",
+    type: "direct",
+    score: 73,
+    value: 580000,
+    displayValue: "$580K",
+    stage: "discovered",
+    industry: "Experience Management",
+    guideCreated: true,
+    guideUrl: "/Red_Pepper_Software_Sr_Technical_Implementation_Consultant_Guide.html"
+  },
+  {
+    id: 34,
+    company: "Protiviti",
+    description: "Adobe Experience Senior Consultant - MarTech AI",
+    type: "partner",
+    score: 78,
+    value: 1750000,
+    displayValue: "$1.75M (10x)",
+    stage: "discovered",
+    industry: "Professional Services",
+    partnerTier: "gold",
+    multiplier: 10,
+    guideCreated: true,
+    guideUrl: "/Protiviti_Adobe_Experience_Senior_Consultant_Guide.html"
+  },
+  {
+    id: 35,
+    company: "Gong.io",
+    description: "Professional Services Consultant - Revenue intelligence AI",
+    type: "direct",
+    score: 88,
+    value: 900000,
+    displayValue: "$900K",
+    stage: "contacted",
+    industry: "Sales Technology",
+    contacts: {
+      vp_product: "VP of Product",
+      linkedin: "https://www.linkedin.com/company/gong-io/"
+    },
+    environmentalAngle: "Cloud-native solution reduces data center usage by 80%",
+    guideCreated: true,
+    guideUrl: "/Gong_Professional_Services_Consultant_Guide.html"
+  },
+  {
+    id: 36,
+    company: "Solventum (3M spinoff)",
+    description: "Implementation Consultant - Healthcare RCM AI",
+    type: "direct",
+    score: 79,
+    value: 1350000,
+    displayValue: "$1.35M",
+    stage: "discovered",
+    industry: "Healthcare Technology",
+    guideCreated: true,
+    guideUrl: "/Solventum_Implementation_Consultant_Guide.html"
+  },
+  {
+    id: 37,
+    company: "Workday",
+    description: "Solution Consulting Enablement - Enterprise platform AI",
+    type: "direct",
+    score: 81,
+    value: 1875000,
+    displayValue: "$1.875M",
+    stage: "discovered",
+    industry: "Enterprise Software",
+    guideCreated: true,
+    guideUrl: "/Workday_Solution_Consulting_Enablement_Lead_Guide.html"
+  },
+  {
+    id: 38,
+    company: "CaseWorthy",
+    description: "Solutions Consultant - Human services platform automation",
+    type: "direct",
+    score: 71,
+    value: 475000,
+    displayValue: "$475K",
+    stage: "discovered",
+    industry: "Human Services",
+    environmentalAngle: "Reduces travel for case workers by 60%, lowering emissions",
+    guideCreated: true,
+    guideUrl: "/CaseWorthy_Solutions_Consultant_Guide.html"
+  },
+  {
+    id: 39,
+    company: "Eide Bailly",
+    description: "Solutions Consultant CRM - Agentic AI focus",
+    type: "partner",
+    score: 82,
+    value: 2500000,
+    displayValue: "$2.5M (20x)",
+    stage: "contacted",
+    industry: "Professional Services",
+    partnerTier: "gold",
+    multiplier: 20,
+    contacts: {
+      innovation: "Director of Innovation",
+      linkedin: "https://www.linkedin.com/company/eide-bailly/"
+    },
+    painPoints: [
+      "Agentic AI understanding",
+      "Client readiness for AI",
+      "Implementation methodology",
+      "ROI demonstration"
+    ],
+    environmentalAngle: "Remote-first AI reduces travel emissions by 70%",
+    guideCreated: true,
+    guideUrl: "/Eide_Bailly_Solutions_Consultant_CRM_Guide.html"
+  },
+  {
+    id: 40,
+    company: "Addepar",
+    description: "ADM Solutions Consultant - Wealth data platform AI",
+    type: "direct",
+    score: 84,
+    value: 1850000,
+    displayValue: "$1.85M",
+    stage: "discovered",
+    industry: "Wealth Technology",
+    environmentalAngle: "Digital wealth management reduces paper by 95%",
+    guideCreated: true,
+    guideUrl: "/Addepar_ADM_Solutions_Consultant_Guide.html"
+  },
+  
+  // MERGED OPPORTUNITIES
+  {
+    id: 100,
+    company: "Cafe Rio",
+    description: "MERGED: AP Automation + Customer Service AI + Inventory Management",
+    type: "merged",
+    score: 95,
+    value: 12500000,
+    displayValue: "$12.5M",
+    stage: "discovered",
+    industry: "Restaurant/Food Service",
+    mergedFrom: [1, 101, 102], // IDs of individual opportunities
+    painPoints: [
+      "End-to-end restaurant operations AI",
+      "From supplier to customer experience",
+      "Real-time cost and satisfaction tracking",
+      "Multi-location orchestration"
+    ],
+    outreachScript: "Hi [Name], I see Cafe Rio has multiple operational challenges. What if one integrated AI platform could handle AP processing, customer service, AND inventory management, saving $12.5M annually while improving both margins and customer satisfaction?",
+    environmentalAngle: "Comprehensive digital transformation reduces waste by 40% and carbon footprint by 35%",
+    guideCreated: false
+  }
+];
+
+// Pipeline stages configuration
+const pipelineStages = [
+  { name: 'discovered', label: 'Discovered', count: 0, value: 0 },
+  { name: 'qualified', label: 'Qualified', count: 0, value: 0 },
+  { name: 'contacted', label: 'Contacted', count: 0, value: 0 },
+  { name: 'proposal', label: 'Proposal', count: 0, value: 0 },
+  { name: 'negotiation', label: 'Negotiation', count: 0, value: 0 },
+  { name: 'closed', label: 'Closed Won', count: 0, value: 0 }
+];
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+  loadExistingData();
+  updateDashboard();
+  renderOpportunities();
+  initializeCharts();
+});
+
+// Load existing opportunities from localStorage
+function loadExistingData() {
+  const saved = localStorage.getItem('aiOpportunities');
+  if (saved) {
+    opportunities = JSON.parse(saved);
+  }
+}
+
+// Save opportunities
+function saveOpportunities() {
+  localStorage.setItem('aiOpportunities', JSON.stringify(opportunities));
+}
+
+// Update dashboard statistics
+function updateDashboard() {
+  const totalOpps = opportunities.length;
+  const totalValue = opportunities.reduce((sum, opp) => sum + opp.value, 0);
+  const partners = opportunities.filter(o => o.type === 'partner');
+  const totalMultiplier = partners.reduce((sum, p) => sum + (p.multiplier || 1), 1);
+  const activeDeals = opportunities.filter(o => ['contacted', 'proposal', 'negotiation'].includes(o.stage)).length;
+  
+  document.getElementById('totalOpportunities').textContent = totalOpps;
+  document.getElementById('pipelineValue').textContent = '$' + (totalValue / 1000000).toFixed(1) + 'M';
+  document.getElementById('partnerMultiplier').textContent = totalMultiplier + 'x';
+  document.getElementById('activeDeals').textContent = activeDeals;
+  
+  // Update pipeline stages
+  updatePipelineStages();
+}
+
+// Update pipeline stage counts
+function updatePipelineStages() {
+  // Reset counts
+  pipelineStages.forEach(stage => {
+    stage.count = 0;
+    stage.value = 0;
+  });
+  
+  // Count opportunities per stage
+  opportunities.forEach(opp => {
+    const stage = pipelineStages.find(s => s.name === opp.stage);
+    if (stage) {
+      stage.count++;
+      stage.value += opp.value;
+    }
+  });
+  
+  // Update UI
+  const stageElements = document.querySelectorAll('.stage');
+  stageElements.forEach((elem, index) => {
+    if (pipelineStages[index]) {
+      elem.querySelector('.stage-circle').textContent = pipelineStages[index].count;
+      elem.querySelector('div:last-child').textContent = '$' + (pipelineStages[index].value / 1000000).toFixed(1) + 'M';
+      
+      if (pipelineStages[index].count > 0) {
+        elem.classList.add('active');
+      } else {
+        elem.classList.remove('active');
+      }
+    }
+  });
+}
+
+// Render opportunities table
+function renderOpportunities() {
+  const tbody = document.getElementById('opportunitiesTableBody');
+  tbody.innerHTML = '';
+  
+  opportunities.forEach(opp => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>
+        <div class="company-info">
+          <div class="company-name">${opp.company}</div>
+          <div class="company-desc">${opp.description}</div>
+        </div>
+      </td>
+      <td>
+        <span class="badge badge-${opp.type}">${opp.type.toUpperCase()}</span>
+      </td>
+      <td>
+        <span class="score-badge score-${getScoreClass(opp.score)}">${opp.score}</span>
+      </td>
+      <td>${opp.displayValue}</td>
+      <td>${opp.stage}</td>
+      <td>
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="viewOpportunity(${opp.id})">View</button>
+          ${opp.guideCreated ? 
+            `<a href="${opp.guideUrl}" class="btn btn-success" target="_blank">Guide</a>` :
+            `<button class="btn btn-warning" onclick="generateGuide(${opp.id})">Create Guide</button>`
+          }
+        </div>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// Get score class for styling
+function getScoreClass(score) {
+  if (score >= 80) return 'high';
+  if (score >= 60) return 'medium';
+  return 'low';
+}
+
+// View opportunity details
+function viewOpportunity(id) {
+  const opp = opportunities.find(o => o.id === id);
+  if (!opp) return;
+  
+  const modalContent = document.getElementById('modalContent');
+  modalContent.innerHTML = `
+    <h2>${opp.company}</h2>
+    <p style="color: #999; margin-bottom: 20px;">${opp.description}</p>
+    
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+      <div>
+        <strong>Type:</strong> ${opp.type}
+        ${opp.partnerTier ? `<span class="badge badge-${opp.partnerTier}">${opp.partnerTier.toUpperCase()}</span>` : ''}
+      </div>
+      <div><strong>Score:</strong> ${opp.score}</div>
+      <div><strong>Value:</strong> ${opp.displayValue}</div>
+      <div><strong>Industry:</strong> ${opp.industry || 'N/A'}</div>
+      <div><strong>Stage:</strong> ${opp.stage}</div>
+      <div><strong>Job URL:</strong> ${opp.jobUrl ? `<a href="${opp.jobUrl}" target="_blank">View Posting</a>` : 'N/A'}</div>
+    </div>
+    
+    ${opp.contacts ? `
+    <h3>Contacts & Links</h3>
+    <div style="margin-bottom: 20px;">
+      <p>LinkedIn: <a href="${opp.contacts.linkedin}" target="_blank">${opp.contacts.linkedin}</a></p>
+      ${opp.contacts.website ? `<p>Website: <a href="${opp.contacts.website}" target="_blank">${opp.contacts.website}</a></p>` : ''}
+      ${opp.contacts.cfo ? `<p>Target Contact: ${opp.contacts.cfo}</p>` : ''}
+    </div>
+    ` : ''}
+    
+    ${opp.painPoints ? `
+    <h3>Key Pain Points</h3>
+    <ul>
+      ${opp.painPoints.map(point => `<li>${point}</li>`).join('')}
+    </ul>
+    ` : ''}
+    
+    ${opp.outreachScript ? `
+    <h3>Outreach Script</h3>
+    <div class="guide-preview">
+      <p>${opp.outreachScript}</p>
+    </div>
+    ` : ''}
+    
+    ${opp.environmentalAngle ? `
+    <h3>Environmental/Social Impact</h3>
+    <p style="color: #4caf50;">${opp.environmentalAngle}</p>
+    ` : ''}
+    
+    <div style="margin-top: 30px;">
+      ${!opp.guideCreated ? 
+        `<button class="btn btn-success" onclick="generateGuide(${opp.id}); closeModal();">Generate Full Guide</button>` :
+        `<a href="${opp.guideUrl}" class="btn btn-primary" target="_blank">View Full Guide</a>`
+      }
+      <button class="btn btn-warning" onclick="updateOpportunityStage(${opp.id})">Update Stage</button>
+    </div>
+  `;
+  
+  document.getElementById('opportunityModal').style.display = 'block';
+}
+
+// Close modal
+function closeModal() {
+  document.getElementById('opportunityModal').style.display = 'none';
+}
+
+// Generate guide for opportunity
+function generateGuide(id) {
+  const opp = opportunities.find(o => o.id === id);
+  if (!opp) return;
+  
+  showNotification('Generating AI consulting guide for ' + opp.company + '...');
+  
+  // Simulate guide generation (in real implementation, this would create actual HTML file)
+  setTimeout(() => {
+    opp.guideCreated = true;
+    opp.guideUrl = `/${opp.company.replace(/\s+/g, '_')}_AI_Consulting_Guide.html`;
+    saveOpportunities();
+    renderOpportunities();
+    showNotification('Guide generated successfully!', 'success');
+  }, 2000);
+}
+
+// Run automated search
+function runAutomatedSearch() {
+  const btn = document.querySelector('.run-search-btn');
+  const loading = document.getElementById('loadingIndicator');
+  const status = document.getElementById('searchStatus');
+  
+  btn.disabled = true;
+  loading.style.display = 'block';
+  status.textContent = 'Searching job boards...';
+  
+  // Simulate search process
+  setTimeout(() => {
+    status.textContent = 'Found 12 new opportunities. Enriching data...';
+    
+    setTimeout(() => {
+      status.textContent = 'Analyzing companies and scoring opportunities...';
+      
+      setTimeout(() => {
+        // Add new opportunities
+        const newOpps = [
+          {
+            id: Date.now(),
+            company: "Tech Innovators Inc",
+            description: "15 Data Entry Specialists needed - perfect for automation",
+            type: "direct",
+            score: 82,
+            value: 750000,
+            displayValue: "$750K",
+            stage: "discovered",
+            industry: "Technology",
+            jobUrl: "https://www.indeed.com/viewjob?jk=789456",
+            painPoints: [
+              "Manual data transfer between 5 systems",
+              "24-hour processing delays",
+              "High error rates in data entry",
+              "Scaling challenges"
+            ],
+            outreachScript: "I noticed you're hiring 15 data entry specialists. Our AI can handle that workload with 99.9% accuracy at 50% the cost.",
+            guideCreated: false
+          },
+          {
+            id: Date.now() + 1,
+            company: "Global Consulting Partners",
+            description: "CRM Implementation Firm - 50+ clients",
+            type: "partner",
+            score: 88,
+            value: 5000000,
+            displayValue: "$5M (20x)",
+            stage: "discovered",
+            industry: "Consulting",
+            partnerTier: "gold",
+            multiplier: 20,
+            contacts: {
+              partner: "Director of Partnerships",
+              linkedin: "https://www.linkedin.com/company/global-consulting/"
+            },
+            guideCreated: false
+          }
+        ];
+        
+        // Check for duplicates
+        newOpps.forEach(newOpp => {
+          const existing = opportunities.find(o => o.company === newOpp.company && o.type === newOpp.type);
+          if (!existing) {
+            opportunities.push(newOpp);
+          }
+        });
+        
+        // Check for merge opportunities
+        checkMergeOpportunities();
+        
+        saveOpportunities();
+        updateDashboard();
+        renderOpportunities();
+        
+        btn.disabled = false;
+        loading.style.display = 'none';
+        status.textContent = 'Search complete! Found 2 new opportunities.';
+        showNotification('Search complete! 2 new opportunities added.', 'success');
+      }, 2000);
+    }, 2000);
+  }, 2000);
+}
+
+// Check for merge opportunities
+function checkMergeOpportunities() {
+  const companies = {};
+  
+  // Group by company
+  opportunities.forEach(opp => {
+    if (opp.type !== 'merged') {
+      if (!companies[opp.company]) {
+        companies[opp.company] = [];
+      }
+      companies[opp.company].push(opp);
+    }
+  });
+  
+  // Create merged opportunities for companies with multiple openings
+  Object.entries(companies).forEach(([company, opps]) => {
+    if (opps.length > 1) {
+      const existingMerged = opportunities.find(o => o.company === company && o.type === 'merged');
+      if (!existingMerged) {
+        const totalValue = opps.reduce((sum, o) => sum + o.value, 0);
+        const avgScore = Math.round(opps.reduce((sum, o) => sum + o.score, 0) / opps.length);
+        
+        opportunities.push({
+          id: Date.now() + Math.random(),
+          company: company,
+          description: `MERGED: ${opps.map(o => o.description).join(' + ')}`,
+          type: 'merged',
+          score: Math.min(avgScore + 10, 100), // Boost score for merged
+          value: totalValue * 1.2, // 20% premium for comprehensive solution
+          displayValue: `$${(totalValue * 1.2 / 1000000).toFixed(1)}M`,
+          stage: 'discovered',
+          industry: opps[0].industry,
+          mergedFrom: opps.map(o => o.id),
+          painPoints: [
+            "End-to-end digital transformation",
+            "Unified AI platform across all departments",
+            "Enterprise-wide efficiency gains",
+            "Comprehensive ROI across multiple functions"
+          ],
+          outreachScript: `I see ${company} has multiple automation needs. Let's discuss a comprehensive AI platform that addresses all ${opps.length} areas, delivering ${opps.length}x the impact.`,
+          guideCreated: false
+        });
+      }
+    }
+  });
+}
+
+// Update opportunity stage
+function updateOpportunityStage(id) {
+  const opp = opportunities.find(o => o.id === id);
+  if (!opp) return;
+  
+  const stages = ['discovered', 'qualified', 'contacted', 'proposal', 'negotiation', 'closed'];
+  const currentIndex = stages.indexOf(opp.stage);
+  const nextStage = stages[(currentIndex + 1) % stages.length];
+  
+  opp.stage = nextStage;
+  saveOpportunities();
+  updateDashboard();
+  renderOpportunities();
+  showNotification(`${opp.company} moved to ${nextStage} stage`, 'success');
+}
+
+// Filter opportunities
+function filterOpportunities() {
+  // Implementation for filtering
+  renderOpportunities();
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.className = 'notification show';
+  
+  if (type === 'success') {
+    notification.style.background = 'var(--success)';
+  }
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 3000);
+}
+
+// Theme toggle
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  const isDark = !document.body.classList.contains('light-mode');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  document.querySelector('.theme-toggle').textContent = isDark ? '🌙' : '☀️';
+}
+
+// Load theme preference
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'light') {
+  document.body.classList.add('light-mode');
+  document.querySelector('.theme-toggle').textContent = '☀️';
+}
+
+// Initialize charts (placeholder)
+function initializeCharts() {
+  // Would integrate with Chart.js or similar
+  console.log('Charts initialized');
+}
+
+// Window click handler for modal
+window.onclick = function(event) {
+  const modal = document.getElementById('opportunityModal');
+  if (event.target === modal) {
+    closeModal();
+  }
+}
+</script>
+
+</body>
+</html>

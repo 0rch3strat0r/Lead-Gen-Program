@@ -1,0 +1,41 @@
+<!-- ▸ AI vs FTE Sales-Pitch Template  •  Drop-in HTML  -->
+<!-- Replace ${…} placeholders from your program, or bind them via JS -->
+
+<style>
+  .ai-pitch {font-family: system-ui, sans-serif; line-height: 1.4; max-width: 700px;}
+  .ai-pitch h2 {margin: .4em 0 .2em; font-size: 1.4rem;}
+  .ai-pitch h3 {margin: 1.2em 0 .4em; font-size: 1.1rem;}
+  .ai-pitch ul {margin: 0 0 .8em 1.1em; padding: 0;}
+  .ai-pitch li {margin-bottom: .4em;}
+  .ai-pitch .fine-print {font-size: .85rem; color: #666;}
+</style>
+
+<div class="ai-pitch">
+
+  <h2>Fire the overhead, keep the write-offs.</h2>
+
+  <ul>
+    <li><strong>Current drain:</strong> <span id="employeeTotalComp">${EMPLOYEE_TOTAL_COMP}</span> every year for one FTE.</li>
+    <li><strong>Our swap-in:</strong> pay <span id="aiBuildFee">${AI_BUILD_FEE}</span> once, then <span id="aiRetainerAnnual">${AI_RETAINER_ANNUAL}</span> each year.</li>
+  </ul>
+
+  <h3>Tax optics</h3>
+  <ul>
+    <li>Retainer: 100 % deductible each year (<span id="taxDeductRetainer">${TAX_DEDUCT_RETAINER}</span>).</li>
+    <li>Build fee: <span id="taxDeductBuildYear1">${TAX_DEDUCT_BUILD_YEAR1}</span> deductible in Year 1 under <span id="legislativeStatus">${LEGISLATIVE_STATUS}</span> rules, with the balance spread over <span id="sect174AmortYears">${SECT174_AMORT_YEARS}</span> year(s) if required.</li>
+  </ul>
+
+  <h3>Cash optics</h3>
+  <ul>
+    <li>Year 1 net savings: <span id="cashSavingsYear1">${CASH_SAVINGS_YEAR1}</span>.</li>
+    <li>Every year after: <span id="cashSavingsSubsequent">${CASH_SAVINGS_SUBSEQUENT}</span> saved versus payroll.</li>
+  </ul>
+
+  <h3>Operational optics</h3>
+  <p>No payroll tax, no PTO, no turnover risk—just predictable opex and full deductibility over time.</p>
+
+  <p class="fine-print">
+    <em>Fine print: pending legislation could let the entire build fee expense immediately; if Congress drags its feet, deductions simply spread over <span id="fineSect174AmortYears">${SECT174_AMORT_YEARS}</span> years. Either way, every dollar is a write-off.</em>
+  </p>
+
+</div>
