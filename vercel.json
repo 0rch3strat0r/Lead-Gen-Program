@@ -1,18 +1,6 @@
 {
-  "buildCommand": "npm install --prefix backend && npm run build --prefix backend",
+  "buildCommand": "cd backend && npm run build",
   "outputDirectory": "backend/dist",
-  "installCommand": "npm install --prefix backend",
-  "framework": null,
-  "functions": {
-    "backend/dist/server.js": {
-      "runtime": "@vercel/node@3.0.0",
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/backend/dist/server.js"
-    }
-  ]
+  "installCommand": "cd backend && npm install",
+  "framework": null
 }
