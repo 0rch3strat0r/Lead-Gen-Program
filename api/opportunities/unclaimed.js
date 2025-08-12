@@ -9,7 +9,8 @@ export default async function handler(req, res) {
     if (!user) return res.status(403).json({ error: 'unknown user' });
     if (user.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
 
-    const { supabase } = await import('../../backend/src/services/supabase.js');
+    const { getSupabase } = await import('../../backend/src/services/db.js');
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('opportunities')
       .select('*')
