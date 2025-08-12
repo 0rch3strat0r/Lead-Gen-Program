@@ -28,4 +28,8 @@ app.use(resolveClientId(process.env.DEFAULT_CLIENT_ID));
 app.use("/api", bearerAuth(process.env.API_TOKEN), jobsRouter);
 
 const port = Number(process.env.PORT || 3000);
-app.listen(port, () => logger.info({ port }, "server started"));
+if (process.env.NODE_ENV !== "production") {
+  app.listen(port, () => logger.info({ port }, "server started"));
+}
+
+export default app;
