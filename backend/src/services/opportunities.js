@@ -28,7 +28,7 @@ export async function listOpportunities(clientId, status){
     .from("opportunities")
     .select("*")
     .eq("client_id", clientId)
-    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(200);
   if (status) q = q.eq("status", status);
   const { data, error } = await q;
