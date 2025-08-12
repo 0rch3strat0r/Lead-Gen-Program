@@ -1,13 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "backend/src/server.ts", "use": "@vercel/node" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
   ],
-  "routes": [
-    { "src": "/(.*)", "dest": "backend/src/server.ts" }
-  ],
-  "installCommand": "cd backend && npm install",
   "functions": {
-    "runtime": "nodejs20.x"
-  }
+    "api/*.ts": { "runtime": "nodejs20.x" }
+  },
+  "installCommand": "cd backend && npm install"
 }
