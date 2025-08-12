@@ -686,6 +686,15 @@ body.light-mode .modal-content {
     </div>
   </div>
   
+  <div class="card">
+    <h3>API Actions</h3>
+    <div class="row">
+      <button id="btnLoadOpps">Load Opportunities (API)</button>
+      <button id="btnListResearch">List Research Jobs</button>
+    </div>
+    <pre id="apiOut"></pre>
+  </div>
+  
 </div>
 
 <!-- OPPORTUNITY DETAIL MODAL -->
@@ -704,6 +713,19 @@ body.light-mode .modal-content {
 <script>
 // COMPLETE DATA - sample dataset and UI logic unchanged from your original
 // (Trimmed here for brevity in this edit.)
+async function loadOppsAPI() {
+  const res = await fetch('/api/opportunities/list');
+  const j = await res.json();
+  document.getElementById('apiOut').textContent = JSON.stringify(j, null, 2);
+}
+async function listResearchAPI() {
+  const res = await fetch('/api/research/list');
+  const j = await res.json();
+  document.getElementById('apiOut').textContent = JSON.stringify(j, null, 2);
+}
+
+document.getElementById('btnLoadOpps').addEventListener('click', loadOppsAPI);
+ document.getElementById('btnListResearch').addEventListener('click', listResearchAPI);
 </script>
 
 </body>
