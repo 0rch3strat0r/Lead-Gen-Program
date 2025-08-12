@@ -2,9 +2,5 @@
   "version": 2,
   "rewrites": [
     { "source": "/healthz", "destination": "/api/healthz" }
-  ],
-  "functions": {
-    "api/*.ts": { "runtime": "nodejs20.x" }
-  },
-  "installCommand": "cd backend && npm install"
+  ]
 }
