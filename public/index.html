@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lead Gen Dashboard</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
+    .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-top: 16px; }
+    .triangle { width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 90px solid #ccc; position: relative; cursor: pointer; }
+    .triangle .dot { width: 12px; height: 12px; background: #0070f3; border-radius: 50%; position: absolute; left: -6px; top: 70px; transition: transform .2s; }
+    .triangle .label { position: absolute; font-size: 12px; }
+    .label-default { top: 95px; left: -20px; }
+    .label-plus { top: 45px; left: -75px; }
+    .label-custom { top: 45px; left: 35px; }
+    button { padding: 8px 12px; }
+    select, input { padding: 6px; }
+    pre { white-space: pre-wrap; background: #f8f8f8; padding: 8px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Lead Gen Dashboard</h1>
+
+  <div class="card">
+    <h3>Search Mode</h3>
+    <div class="row">
+      <div class="triangle" id="modeTriangle">
+        <div class="dot" id="modeDot"></div>
+        <span class="label label-default">Default</span>
+        <span class="label label-plus">Default + Keywords</span>
+        <span class="label label-custom">Custom</span>
+      </div>
+      <div>
+        <label>Region</label>
+        <select id="regionSelect"></select>
+      </div>
+      <div id="keywordsBox" style="display:none">
+        <label>Additional Keywords</label>
+        <input id="keywordsInput" placeholder="comma,separated,terms" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Run Research</h3>
+    <div class="row">
+      <input id="companyName" placeholder="Company Name" />
+      <input id="companyUrl" placeholder="https://example.com" style="min-width:280px" />
+      <button id="runBtn">Run</button>
+    </div>
+    <pre id="researchOut"></pre>
+  </div>
+
+  <div class="card">
+    <h3>Opportunities</h3>
+    <div class="row">
+      <button id="refreshOpps">Refresh</button>
+    </div>
+    <pre id="oppsOut"></pre>
+  </div>
+
+  <script>
+  const mode = { value: 'default' };
+  const dot = document.getElementById('modeDot');
+  const triangle = document.getElementById('modeTriangle');
+  const regionSelect = document.getElementById('regionSelect');
+  const keywordsBox = document.getElementById('keywordsBox');
+  const keywordsInput = document.getElementById('keywordsInput');
+
+  function updateDot() {
+    // default at bottom, plus at left, custom at right
+    if (mode.value === 'default') dot.style.transform = 'translate(0px, 0px)';
+    if (mode.value === 'plus') dot.style.transform = 'translate(-40px, -30px)';
+    if (mode.value === 'custom') dot.style.transform = 'translate(40px, -30px)';
+    keywordsBox.style.display = mode.value === 'plus' ? 'inline-block' : 'none';
+  }
+
+  triangle.addEventListener('click', () => {
+    mode.value = mode.value === 'default' ? 'plus' : mode.value === 'plus' ? 'custom' : 'default';
+    updateDot();
+  });
+
+  async function loadRegions() {
+    const res = await fetch('/api/regions/list');
+    const j = await res.json();
+    regionSelect.innerHTML = '';
+    (j.regions || []).forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.code; opt.textContent = r.name; regionSelect.appendChild(opt);
+    });
+  }
+
+  async function runResearch() {
+    const payload = {
+      companyName: document.getElementById('companyName').value,
+      companyUrl: document.getElementById('companyUrl').value,
+      notes: JSON.stringify({
+        mode: mode.value,
+        region: regionSelect.value,
+        extraKeywords: mode.value === 'plus' ? (keywordsInput.value || '') : ''
+      })
+    };
+    const r = await fetch('/api/research/run', { method: 'POST', headers: { 'content-type':'application/json' }, body: JSON.stringify(payload) });
+    const j = await r.json();
+    document.getElementById('researchOut').textContent = JSON.stringify(j, null, 2);
+  }
+
+  async function refreshOpps() {
+    const r = await fetch('/api/opportunities/list');
+    const j = await r.json();
+    document.getElementById('oppsOut').textContent = JSON.stringify(j, null, 2);
+  }
+
+  document.getElementById('runBtn').addEventListener('click', runResearch);
+  document.getElementById('refreshOpps').addEventListener('click', refreshOpps);
+
+  loadRegions().then(updateDot);
+  </script>
+</body>
+</html>
