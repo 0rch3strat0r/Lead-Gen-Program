@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabase } from "./db.js";
 
 export type OpportunityStatus = "unclaimed" | "claimed" | "won" | "lost";
 export type Opportunity = {
@@ -24,15 +24,14 @@ export async function createOrGetOpportunity(params: {
   regionCode?: string;
   keywords?: string[];
 }): Promise<Opportunity> {
+  const supabase = getSupabase();
   const { clientId, title, url, source, regionCode, keywords } = params;
-  // Try create
   let { data, error } = await supabase
     .from("opportunities")
     .insert([{ client_id: clientId, title, url, source, region_code: regionCode, keywords }])
     .select()
     .single();
   if (error && (error as any).code === "23505") {
-    // Duplicate → fetch existing
     const { data: existing, error: fetchErr } = await supabase
       .from("opportunities")
       .select("*")
@@ -47,6 +46,7 @@ export async function createOrGetOpportunity(params: {
 }
 
 export async function listOpportunities(clientId: string, status?: OpportunityStatus) {
+  const supabase = getSupabase();
   let q = supabase
     .from("opportunities")
     .select("*")
@@ -60,8 +60,8 @@ export async function listOpportunities(clientId: string, status?: OpportunitySt
 }
 
 export async function claimOpportunity(params: { id: string; userId: string; clientId: string }) {
+  const supabase = getSupabase();
   const { id, userId, clientId } = params;
-  // Only claim if currently unclaimed for this client
   const { data, error } = await supabase
     .from("opportunities")
     .update({ status: "claimed", claimed_by: userId, claimed_at: new Date().toISOString() })
@@ -75,6 +75,7 @@ export async function claimOpportunity(params: { id: string; userId: string; cli
 }
 
 export async function updateOpportunityStatus(params: { id: string; clientId: string; status: OpportunityStatus }) {
+  const supabase = getSupabase();
   const { id, clientId, status } = params;
   const { data, error } = await supabase
     .from("opportunities")

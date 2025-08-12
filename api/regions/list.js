@@ -1,6 +1,7 @@
 export default async function handler(_req, res) {
   try {
-    const { supabase } = await import('../../backend/src/services/supabase.js');
+    const { getSupabase } = await import('../../backend/src/services/db.js');
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('regions')
       .select('*')
