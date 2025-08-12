@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const { companyUrl = '', companyName = '', notes = '' } = body;
 
-    const { runDeepResearch } = await import('../../backend/src/services/research/engine.ts');
+    const { runDeepResearch } = await import('../../backend/src/services/research/engine.js');
     const result = await runDeepResearch({ companyUrl, companyName, notes });
 
     return res.status(200).json(result);
