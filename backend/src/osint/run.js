@@ -13,10 +13,10 @@ const TOUCHPOINTS = [
   { id:'rss',   stage:2, required:false, rateKey:'rss',   fn: rssNews },
   { id:'gdelt', stage:2, required:false, rateKey:'gdelt', fn: gdeltNews },
 
-  { id:'jobs',   stage:3, required:true,  rateKey:'jobs',   fn: jobsBoards },
+  { id:'jobs',   stage:3, required:false,  rateKey:'jobs',   fn: jobsBoards },
   { id:'social', stage:3, required:false, rateKey:'social', fn: socialPublic },
 
-  { id:'tech', stage:4, required:true, rateKey:'tech', fn: techFootprint },
+  { id:'tech', stage:4, required:false, rateKey:'tech', fn: techFootprint },
 
   { id:'procurement', stage:5, required:false, rateKey:'proc',     fn: procurement },
   { id:'archives',    stage:5, required:false, rateKey:'archives', fn: archives }
