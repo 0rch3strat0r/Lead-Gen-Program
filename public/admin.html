@@ -97,6 +97,16 @@
     <pre id="updateOut"></pre>
   </div>
 
+  <div class="card">
+    <h3>Download Sheets</h3>
+    <div class="row">
+      <input id="dlOppId" placeholder="Opportunity ID" style="min-width:260px" />
+      <button id="btnDlBrief">Download Executive Brief</button>
+      <button id="btnDlCheat">Download Cheat Sheet</button>
+    </div>
+    <pre id="dlOut"></pre>
+  </div>
+
 <script>
 function loadHeaders() {
   document.getElementById('xUserId').value = localStorage.getItem('x-user-id') || 'user-123';
@@ -191,6 +201,32 @@ async function updateOpp() {
   document.getElementById('updateOut').textContent = JSON.stringify(j, null, 2);
 }
 
+async function downloadFile(url, filename) {
+  const r = await fetch(url, { headers: headers() });
+  if (!r.ok) {
+    const t = await r.text();
+    document.getElementById('dlOut').textContent = `Error ${r.status}: ${t}`;
+    return;
+  }
+  const blob = await r.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+async function downloadBrief() {
+  const id = document.getElementById('dlOppId').value.trim();
+  if (!id) { document.getElementById('dlOut').textContent = 'Enter an opportunity id'; return; }
+  await downloadFile(`/api/opportunities/sheet/opportunity?id=${encodeURIComponent(id)}`, `opportunity_${id}.html`);
+}
+async function downloadCheat() {
+  const id = document.getElementById('dlOppId').value.trim();
+  if (!id) { document.getElementById('dlOut').textContent = 'Enter an opportunity id'; return; }
+  await downloadFile(`/api/opportunities/sheet/cheatsheet?id=${encodeURIComponent(id)}`, `cheatsheet_${id}.html`);
+}
+
 document.getElementById('btnSaveHeaders').addEventListener('click', () => { saveHeaders(); checkMe(); });
 
 document.getElementById('btnCheckMe').addEventListener('click', checkMe);
@@ -201,6 +237,8 @@ document.getElementById('btnCreateOpp').addEventListener('click', createOpp);
 document.getElementById('btnAssign').addEventListener('click', assignOpp);
 document.getElementById('btnUnassign').addEventListener('click', unassignOpp);
 document.getElementById('btnUpdateOpp').addEventListener('click', updateOpp);
+document.getElementById('btnDlBrief').addEventListener('click', downloadBrief);
+document.getElementById('btnDlCheat').addEventListener('click', downloadCheat);
 
 loadHeaders();
 checkMe();
