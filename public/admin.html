@@ -70,6 +70,33 @@
     <pre id="oppsOut"></pre>
   </div>
 
+  <div class="card">
+    <h3>Assign / Unassign</h3>
+    <div class="row">
+      <input id="assignOppId" placeholder="Opportunity ID" style="min-width:260px" />
+      <input id="assigneeUserId" placeholder="Assignee User ID (e.g., user-456)" style="min-width:260px" />
+      <button id="btnAssign">Assign</button>
+      <button id="btnUnassign">Unassign</button>
+    </div>
+    <pre id="assignOut"></pre>
+  </div>
+
+  <div class="card">
+    <h3>Update Stage / Amounts</h3>
+    <div class="row">
+      <input id="updOppId" placeholder="Opportunity ID" style="min-width:240px" />
+      <input id="updStage" placeholder="stage (e.g., discovered, qualified, contacted, proposal, negotiation, closed)" style="min-width:520px" />
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <input id="updEstMvp" placeholder="est_mvp_value" />
+      <input id="updEstContract" placeholder="est_contract_value" />
+      <input id="updAgreedMvp" placeholder="agreed_mvp_value" />
+      <input id="updAgreedContract" placeholder="agreed_contract_value" />
+      <button id="btnUpdateOpp">Update</button>
+    </div>
+    <pre id="updateOut"></pre>
+  </div>
+
 <script>
 function loadHeaders() {
   document.getElementById('xUserId').value = localStorage.getItem('x-user-id') || 'user-123';
@@ -132,6 +159,38 @@ async function createOpp() {
   document.getElementById('oppsOut').textContent = JSON.stringify(j, null, 2);
 }
 
+async function assignOpp() {
+  const payload = {
+    id: document.getElementById('assignOppId').value.trim(),
+    assigneeUserId: document.getElementById('assigneeUserId').value.trim()
+  };
+  const r = await fetch('/api/opportunities/assign', { method:'POST', headers: headers(), body: JSON.stringify(payload) });
+  const j = await r.json();
+  document.getElementById('assignOut').textContent = JSON.stringify(j, null, 2);
+}
+async function unassignOpp() {
+  const payload = { id: document.getElementById('assignOppId').value.trim() };
+  const r = await fetch('/api/opportunities/unassign', { method:'POST', headers: headers(), body: JSON.stringify(payload) });
+  const j = await r.json();
+  document.getElementById('assignOut').textContent = JSON.stringify(j, null, 2);
+}
+async function updateOpp() {
+  const payload = { id: document.getElementById('updOppId').value.trim() };
+  const stage = document.getElementById('updStage').value.trim();
+  const est_mvp = document.getElementById('updEstMvp').value.trim();
+  const est_contract = document.getElementById('updEstContract').value.trim();
+  const agreed_mvp = document.getElementById('updAgreedMvp').value.trim();
+  const agreed_contract = document.getElementById('updAgreedContract').value.trim();
+  if (stage) payload.stage = stage;
+  if (est_mvp) payload.est_mvp_value = Number(est_mvp);
+  if (est_contract) payload.est_contract_value = Number(est_contract);
+  if (agreed_mvp) payload.agreed_mvp_value = Number(agreed_mvp);
+  if (agreed_contract) payload.agreed_contract_value = Number(agreed_contract);
+  const r = await fetch('/api/opportunities/update', { method:'POST', headers: headers(), body: JSON.stringify(payload) });
+  const j = await r.json();
+  document.getElementById('updateOut').textContent = JSON.stringify(j, null, 2);
+}
+
 document.getElementById('btnSaveHeaders').addEventListener('click', () => { saveHeaders(); checkMe(); });
 
 document.getElementById('btnCheckMe').addEventListener('click', checkMe);
@@ -139,6 +198,9 @@ document.getElementById('btnRunResearch').addEventListener('click', runResearch)
 document.getElementById('btnListResearch').addEventListener('click', listResearch);
 document.getElementById('btnListOpps').addEventListener('click', listOpps);
 document.getElementById('btnCreateOpp').addEventListener('click', createOpp);
+document.getElementById('btnAssign').addEventListener('click', assignOpp);
+document.getElementById('btnUnassign').addEventListener('click', unassignOpp);
+document.getElementById('btnUpdateOpp').addEventListener('click', updateOpp);
 
 loadHeaders();
 checkMe();
