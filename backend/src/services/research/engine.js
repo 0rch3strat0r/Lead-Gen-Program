@@ -1,13 +1,11 @@
-export async function runDeepResearch(opts = {}) {
-  const jobId = `job_${Date.now()}`;
-  const { companyUrl = "", companyName = "", notes = "" } = opts || {};
+import { buildOsintContext } from '../../osint/run.js';
 
-  const findings = [
-    { title: "Public Profile", detail: `Scanned ${companyName || companyUrl || "target site"} for overview`, confidence: 0.7, tags: ["profile"] },
-    { title: "Manual Process Signals", detail: "Identified potential repetitive tasks from postings/news", confidence: 0.6, tags: ["ops", "pain"] },
-    { title: "AI Opportunity Map", detail: "Mapped 2–3 cost-elimination candidates for a pilot", confidence: 0.6, tags: ["ai", "roi"] }
-  ];
-
-  const summary = `Initial deep research created ${findings.length} findings for ${companyName || companyUrl || "the target"}.`;
-  return { jobId, summary, findings, meta: { notes } };
+export async function runDeepResearch({ prompt, companyName, companyUrl, notes } = {}) {
+  const ctx = await buildOsintContext({ companyName, homepageUrl: companyUrl, domain: companyUrl });
+  const findings = [];
+  for (const n of ctx.news || []) findings.push({ title: n.title || 'News', detail: n.url || '', tags: ['brody'] });
+  for (const j of ctx.jobs || []) findings.push({ title: j.title || 'Job', detail: j.url || '', tags: ['kevin'] });
+  for (const t of ctx.tech || []) findings.push({ title: t.name || 'Tech', detail: t.slug || '', tags: ['durin'] });
+  const summary = `OSINT summary for ${companyName || companyUrl || 'target'}: ${findings.length} findings`;
+  return { jobId: `job_${Date.now()}`, model: 'osint-runner', summary, findings, meta: { notes, evidence: ctx.evidence?.length || 0 } };
 }
