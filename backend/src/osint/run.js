@@ -10,7 +10,7 @@ const TOUCHPOINTS = [
   { id:'wikipedia',       stage:1, required:false, rateKey:'wikipedia', fn: wikipediaFacts },
   { id:'open_corporates', stage:1, required:false, rateKey:'opencorp',  fn: openCorporatesFacts },
 
-  { id:'rss',   stage:2, required:true,  rateKey:'rss',   fn: rssNews },
+  { id:'rss',   stage:2, required:false, rateKey:'rss',   fn: rssNews },
   { id:'gdelt', stage:2, required:false, rateKey:'gdelt', fn: gdeltNews },
 
   { id:'jobs',   stage:3, required:true,  rateKey:'jobs',   fn: jobsBoards },
