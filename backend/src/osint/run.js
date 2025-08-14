@@ -23,8 +23,14 @@ const TOUCHPOINTS = [
 ];
 
 export async function buildOsintContext(q, opts = {}) {
+  // Normalize inputs: accept companyUrl and derive homepageUrl/domain
+  const homepageUrl = q.homepageUrl || q.companyUrl || (q.domain ? `https://${q.domain}` : undefined);
+  let domain = q.domain;
+  try { if (!domain && homepageUrl) domain = new URL(homepageUrl).hostname; } catch {}
+  const normQuery = { companyName: q.companyName, homepageUrl, domain, notes: q.notes };
+
   const byStage = groupBy(TOUCHPOINTS, t => t.stage);
-  const ctx = { companyName:q.companyName, domain:q.domain, homepageUrl:q.homepageUrl,
+  const ctx = { companyName: normQuery.companyName || '', domain: domain || '', homepageUrl: homepageUrl || '',
     corp:null, news:[], jobs:[], tech:[], social:[], procurement:[], archives:[], evidence:[] };
 
   const maxConc = Math.max(1, Number(opts.maxConcurrencyPerStage ?? 4));
@@ -34,7 +40,7 @@ export async function buildOsintContext(q, opts = {}) {
   for (const stage of Object.keys(byStage).map(Number).sort((a,b)=>a-b)) {
     const tasks = byStage[stage];
 
-    await runBatchStage(tasks, q, maxConc, ctx);
+    await runBatchStage(tasks, normQuery, maxConc, ctx);
 
     ctx.news = dedupeNews(ctx.news);
     ctx.jobs = dedupeJobs(ctx.jobs);
@@ -42,7 +48,7 @@ export async function buildOsintContext(q, opts = {}) {
 
     let missing = requiredMissing(tasks, ctx);
     for (let r = 0; r < requiredRetryRounds && missing.length; r++) {
-      await runBatchStage(tasks.filter(t => missing.includes(t.id)), q, 1, ctx);
+      await runBatchStage(tasks.filter(t => missing.includes(t.id)), normQuery, 1, ctx);
       ctx.news = dedupeNews(ctx.news); ctx.jobs = dedupeJobs(ctx.jobs); ctx.tech = dedupeTech(ctx.tech);
       missing = requiredMissing(tasks, ctx);
     }
@@ -67,7 +73,7 @@ function retryCount(id){ if (id==='website'||id==='rss'||id==='jobs') return 3; 
 function groupBy(arr, keyFn){ return arr.reduce((m,t)=>{ const k=String(keyFn(t)); (m[k] ||= []).push(t); return m; },{}); }
 function requiredMissing(tasks, ctx){ const req=tasks.filter(t=>t.required).map(t=>t.id); const ok=new Set();
   for(const id of req){ if(id==='identity'&&(ctx.homepageUrl||ctx.domain)) ok.add(id);
-    else if(id==='website'&&ctx.evidence?.some(e=>(e.title||'').toLowerCase().includes('home'))) ok.add(id);
+    else if(id==='website'&&ctx.homepageUrl) ok.add(id);
     else if(id==='wikipedia'&&ctx.corp) ok.add(id);
     else if(id==='open_corporates'&&ctx.corp) ok.add(id);
     else if(id==='rss'&&ctx.news.length) ok.add(id);
