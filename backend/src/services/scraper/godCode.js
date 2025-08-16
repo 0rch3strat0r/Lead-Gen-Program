@@ -37,7 +37,7 @@ export async function scrape(input = {}) {
     }
   } catch {}
 
-  // Discover jobs-like pages
+  // Discover jobs-like pages (on-site)
   try {
     const careerHits = await boundedCrawl(homepageUrl, { maxPages: 20, includePatterns: ['career','job','join','work-with','employment','opportun'] });
     for (const { url, html } of careerHits) {
@@ -47,6 +47,17 @@ export async function scrape(input = {}) {
       if (result.jobs.length >= 50) break;
     }
   } catch {}
+
+  // If on-site jobs are scarce, augment with external search (Indeed)
+  if ((result.jobs?.length || 0) < 5 && companyName) {
+    try {
+      const extJobs = await searchIndeed(companyName);
+      if (extJobs.length) {
+        result.jobs.push(...extJobs);
+        result.evidence.push({ url: buildIndeedSearchUrl(companyName), title: 'External jobs: Indeed' });
+      }
+    } catch {}
+  }
 
   // Deduplicate simple
   result.news = dedupeArray(result.news, it => (it.url || it.title || '').toLowerCase());
@@ -146,4 +157,31 @@ function dedupeArray(arr, keyFn){
     if (!k || !seen.has(k)) { if (k) seen.add(k); out.push(it); }
   }
   return out;
+}
+
+function buildIndeedSearchUrl(companyName){
+  const q = encodeURIComponent(companyName);
+  return `https://www.indeed.com/jobs?q=${q}`;
+}
+async function searchIndeed(companyName){
+  const url = buildIndeedSearchUrl(companyName);
+  try {
+    const html = await fetchText(url);
+    // Extract job anchors typical to Indeed result items
+    const items = [];
+    const re = /<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+    let m;
+    while ((m = re.exec(html)) && items.length < 20) {
+      const href = m[1] || '';
+      const text = (m[2] || '').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      if (!/viewjob|pagead|rc\/clk/.test(href)) continue;
+      if (text.length < 2) continue;
+      const abs = absolute('https://www.indeed.com', href);
+      if (!abs) continue;
+      items.push({ title: text, url: abs, source: 'indeed' });
+    }
+    return items;
+  } catch {
+    return [];
+  }
 }
