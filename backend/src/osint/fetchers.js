@@ -3,7 +3,49 @@ import { withRetry } from './lib/retry.js';
 async function fetchText(url) {
   const r = await withRetry(() => fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 LeadGenBot/1.0' } }));
   if (!r.ok) throw new Error(`fetch ${url} ${r.status}`);
+  const ct = r.headers.get('content-type') || '';
+  if (!ct.includes('text/html') && !ct.includes('xml')) throw new Error(`skip non-html ${url}`);
   return r.text();
+}
+
+function isSameOrigin(base, href){
+  try { const a = new URL(base); const b = new URL(href, base); return a.origin === b.origin; } catch { return false; }
+}
+function absolute(base, href){ try{ const u=new URL(href, base); return u.href; }catch{ return null; } }
+function extractLinks(html, base){ return Array.from(html.matchAll(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)).map(m=>({ href:absolute(base,m[1]), text: (m[2]||'').replace(/<[^>]+>/g,'').trim() })).filter(l=>l.href); }
+function isCrawlableUrl(url){
+  try {
+    const u = new URL(url);
+    const ext = (u.pathname.split('.').pop()||'').toLowerCase();
+    const banned = new Set(['pdf','jpg','jpeg','png','gif','svg','ico','zip','rar','7z','mp4','mp3','webm','css','js']);
+    if (banned.has(ext)) return false;
+    if (u.hash) return false;
+    return true;
+  } catch { return false; }
+}
+async function boundedCrawl(startUrl, opts){
+  const maxPages = Math.max(5, Math.min(30, Number(opts?.maxPages ?? 15)));
+  const includePatterns = (opts?.includePatterns || []).map(p => new RegExp(p, 'i'));
+  const visited = new Set();
+  const queue = [startUrl];
+  const hits = [];
+  while (queue.length && visited.size < maxPages) {
+    const url = queue.shift();
+    if (!url || visited.has(url)) continue;
+    visited.add(url);
+    try {
+      const html = await fetchText(url);
+      const links = extractLinks(html, url)
+        .map(l => l.href)
+        .filter(h => isSameOrigin(startUrl, h) && isCrawlableUrl(h));
+      // Record hit if matches includePatterns
+      if (!includePatterns.length || includePatterns.some(rx => rx.test(url))) {
+        hits.push({ url, html });
+      }
+      for (const h of links) if (!visited.has(h) && queue.length + visited.size < maxPages) queue.push(h);
+    } catch { /* ignore single page errors */ }
+  }
+  return hits;
 }
 
 export async function identity(q) {
@@ -26,9 +68,6 @@ export async function websiteBasics(q) {
   }
 }
 
-function absolute(base, href){ try{ const u=new URL(href, base); return u.href; }catch{ return null; } }
-function extractLinks(html, base){ return Array.from(html.matchAll(/<a[^>]+href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi)).map(m=>({ href:absolute(base,m[1]), text: m[2]?.replace(/<[^>]+>/g,'').trim() })).filter(l=>l.href); }
-
 export async function rssNews(q) {
   const news = [];
   const evidence = [];
@@ -41,22 +80,32 @@ export async function rssNews(q) {
       const feedUrl = absolute(q.homepageUrl, feedHref);
       if (feedUrl) {
         const feed = await fetchText(feedUrl);
-        const items = Array.from(feed.matchAll(/<item[\s\S]*?<title>([\s\S]*?)<\/title>[\s\S]*?<link>([\s\S]*?)<\/link>/gi)).slice(0, 8);
+        const items = Array.from(feed.matchAll(/<item[\s\S]*?<title>([\s\S]*?)<\/title>[\s\S]*?<link>([\s\S]*?)<\/link>/gi)).slice(0, 12);
         for (const it of items) news.push({ title: it[1].trim(), url: it[2].trim() });
         if (news.length) evidence.push({ url: feedUrl, title: 'RSS feed' });
       }
     }
     if (!news.length) {
-      // Fallback: crawl /news and /blog
-      for (const path of ['/news','/blog']) {
+      // Fallback: try common sections
+      for (const path of ['/news','/press','/blog','/insights','/media','/stories','/updates']) {
         const url = new URL(path, q.homepageUrl).href;
         try {
           const page = await fetchText(url);
-          const links = extractLinks(page, url).filter(l => l.text && l.text.length < 120).slice(0, 8);
+          const links = extractLinks(page, url).filter(l => l.text && l.text.length < 160).slice(0, 12);
           for (const l of links) news.push({ title: l.text, url: l.href });
           if (links.length) evidence.push({ url, title: 'News/Blog' });
-          if (news.length) break;
+          if (news.length >= 12) break;
         } catch {}
+      }
+    }
+    if (!news.length) {
+      // Last resort: bounded crawler to discover likely news pages
+      const hits = await boundedCrawl(q.homepageUrl, { maxPages: 20, includePatterns: ['news','press','blog','insights','media','stories','updates'] });
+      for (const { url, html: page } of hits) {
+        const links = extractLinks(page, url).filter(l => l.text && l.text.length < 160).slice(0, 6);
+        for (const l of links) news.push({ title: l.text, url: l.href });
+        if (links.length) evidence.push({ url, title: 'Discovered by crawl' });
+        if (news.length >= 12) break;
       }
     }
   } catch {}
@@ -80,7 +129,7 @@ export async function openCorporatesFacts(q) {
 
 function guessCareersUrls(home) {
   const u = new URL(home);
-  const bases = [home, `${u.origin}/careers`, `${u.origin}/jobs`, `${u.origin}/about/careers`, `${u.origin}/company/careers`];
+  const bases = [home, `${u.origin}/careers`, `${u.origin}/jobs`, `${u.origin}/about/careers`, `${u.origin}/company/careers`, `${u.origin}/about-us/careers`, `${u.origin}/join-us`];
   return Array.from(new Set(bases));
 }
 
@@ -88,7 +137,7 @@ function extractJobLines(html) {
   const text = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ');
   const lines = text.split(/\n|\.\s/).map(s => s.trim()).filter(Boolean);
   const patterns = /(engineer|developer|analyst|consultant|manager|specialist|coordinator|architect|designer|account|sales|support)/i;
-  return lines.filter(s => s.length < 120 && patterns.test(s)).slice(0, 12);
+  return lines.filter(s => s.length < 140 && patterns.test(s)).slice(0, 50);
 }
 
 export async function jobsBoards(q) {
@@ -96,14 +145,27 @@ export async function jobsBoards(q) {
   if (!q.homepageUrl) return { _source: 'jobs', jobs };
   const urls = guessCareersUrls(q.homepageUrl);
   const evidence = [];
+  // First pass: common paths
   for (const url of urls) {
     try {
       const html = await fetchText(url);
       const lines = extractJobLines(html);
       if (lines.length) evidence.push({ url, title: 'Careers' });
       for (const l of lines) jobs.push({ title: l, url });
-      if (jobs.length >= 20) break;
+      if (jobs.length >= 50) break;
     } catch {}
+  }
+  // Second pass: bounded crawl to discover careers-like pages
+  if (jobs.length < 10) {
+    const hits = await boundedCrawl(q.homepageUrl, { maxPages: 20, includePatterns: ['careers','jobs','join','work-with','employment','positions','opportun'] });
+    for (const { url, html } of hits) {
+      try {
+        const lines = extractJobLines(html);
+        if (lines.length) evidence.push({ url, title: 'Careers (crawl)' });
+        for (const l of lines) jobs.push({ title: l, url });
+        if (jobs.length >= 50) break;
+      } catch {}
+    }
   }
   return { _source: 'jobs', jobs, evidence };
 }
