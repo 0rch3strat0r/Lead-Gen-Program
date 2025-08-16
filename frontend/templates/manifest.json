@@ -1,0 +1,53 @@
+{
+  "templates": [
+    {
+      "name": "Executive Brief",
+      "file": "exec_brief_template.html",
+      "slots": [
+        "company_name",
+        "industry",
+        "company_summary",
+        "pain_points",
+        "ai_opportunities",
+        "roi_estimate",
+        "call_to_action"
+      ]
+    },
+    {
+      "name": "Company Vetting",
+      "file": "company_vetting_template.html",
+      "slots": [
+        "company_name",
+        "vetting_rows"
+      ]
+    },
+    {
+      "name": "AI Revenue ROI Plan",
+      "file": "ai_revenue_roi_plan.html",
+      "slots": [
+        "baseline_costs",
+        "post_ai_costs",
+        "savings_pct",
+        "payback_period"
+      ]
+    },
+    {
+      "name": "Engagement Process",
+      "file": "ai_engagement_process_detailed.html",
+      "slots": [
+        "phases",
+        "timeline_weeks",
+        "risk_controls"
+      ]
+    },
+    {
+      "name": "Consult Master",
+      "file": "ai_consult_master_template.html",
+      "slots": [
+        "discovery_questions",
+        "case_studies",
+        "deliverables"
+      ]
+    }
+  ]
+}

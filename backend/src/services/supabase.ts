@@ -1,15 +1,18 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const url = process.env.SUPABASE_URL!;
-const serviceKey = process.env.SUPABASE_SERVICE_KEY!;
+let cachedClient: SupabaseClient | null = null;
 
-if (!url || !serviceKey) {
-  throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY");
+function getClient(): SupabaseClient {
+  if (cachedClient) return cachedClient;
+
+  const url = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+  if (!url || !serviceKey) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY");
+  }
+  cachedClient = createClient(url, serviceKey, { auth: { persistSession: false } });
+  return cachedClient;
 }
-
-export const supabase = createClient(url, serviceKey, {
-  auth: { persistSession: false }
-});
 
 export type JobRow = {
   id: string;
@@ -23,6 +26,7 @@ export type JobRow = {
 };
 
 export async function createJob(client_id: string, prompt: string) {
+  const supabase = getClient();
   const { data, error } = await supabase
     .from("jobs")
     .insert([{ client_id, status: "queued", prompt }])
@@ -33,6 +37,7 @@ export async function createJob(client_id: string, prompt: string) {
 }
 
 export async function setJobRunning(id: string) {
+  const supabase = getClient();
   const { data, error } = await supabase
     .from("jobs")
     .update({ status: "running" })
@@ -44,6 +49,7 @@ export async function setJobRunning(id: string) {
 }
 
 export async function setJobResult(id: string, result: any) {
+  const supabase = getClient();
   const { data, error } = await supabase
     .from("jobs")
     .update({ status: "done", result })
@@ -55,6 +61,7 @@ export async function setJobResult(id: string, result: any) {
 }
 
 export async function setJobError(id: string, message: string) {
+  const supabase = getClient();
   const { data, error } = await supabase
     .from("jobs")
     .update({ status: "error", error_message: message })
@@ -66,6 +73,7 @@ export async function setJobError(id: string, message: string) {
 }
 
 export async function listJobs(client_id: string) {
+  const supabase = getClient();
   const { data, error } = await supabase
     .from("jobs")
     .select("*")
@@ -77,6 +85,7 @@ export async function listJobs(client_id: string) {
 }
 
 export async function getJob(client_id: string, id: string) {
+  const supabase = getClient();
   const { data, error } = await supabase
     .from("jobs")
     .select("*")
