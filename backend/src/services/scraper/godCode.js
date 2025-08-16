@@ -53,6 +53,15 @@ export async function scrape(input = {}) {
   result.jobs = dedupeArray(result.jobs, it => (it.url || it.title || '').toLowerCase());
   result.tech = dedupeArray(result.tech, it => (it.product || it.name || '').toLowerCase());
 
+  // Advisory if no on-site jobs found
+  if (!result.jobs.length) {
+    const query = encodeURIComponent(companyName || domain);
+    const indeedUrl = `https://www.indeed.com/jobs?q=${query}`;
+    const linkedinUrl = `https://www.linkedin.com/jobs/search/?keywords=${query}`;
+    result.jobs.push({ title: 'No on-site jobs detected — check external job boards', url: indeedUrl });
+    result.evidence.push({ url: linkedinUrl, title: 'External jobs: LinkedIn search' });
+  }
+
   return result;
 }
 
