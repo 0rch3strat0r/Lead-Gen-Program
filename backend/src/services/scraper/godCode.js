@@ -163,6 +163,60 @@ function buildIndeedSearchUrl(companyName){
   const q = encodeURIComponent(companyName);
   return `https://www.indeed.com/jobs?q=${q}`;
 }
+
+export async function searchJobsByKeywords({ keywords, location } = {}) {
+  // Build search URL for job keywords (not company name)
+  const q = encodeURIComponent(keywords);
+  const l = location ? `&l=${encodeURIComponent(location)}` : '';
+  const url = `https://www.indeed.com/jobs?q=${q}${l}`;
+  
+  try {
+    const html = await fetchText(url);
+    const jobs = [];
+    
+    // Extract job cards with company names
+    const jobCards = html.match(/<div[^>]*class="[^"]*job_seen_beacon[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/gi) || [];
+    
+    for (const card of jobCards) {
+      // Extract job title
+      const titleMatch = card.match(/<span[^>]*title="([^"]+)"[^>]*>/);
+      const title = titleMatch ? titleMatch[1] : '';
+      
+      // Extract company name - this is key!
+      const companyMatch = card.match(/<a[^>]*data-testid="company-name"[^>]*>([^<]+)<\/a>/) ||
+                           card.match(/<div[^>]*data-testid="company-name"[^>]*>([^<]+)<\/div>/) ||
+                           card.match(/<span[^>]*class="[^"]*companyName[^"]*"[^>]*>([^<]+)<\/span>/);
+      const company = companyMatch ? companyMatch[1].trim() : '';
+      
+      // Extract location
+      const locationMatch = card.match(/<div[^>]*data-testid="job-location"[^>]*>([^<]+)<\/div>/) ||
+                           card.match(/<div[^>]*class="[^"]*locationsContainer[^"]*"[^>]*>([^<]+)<\/div>/);
+      const jobLocation = locationMatch ? locationMatch[1].trim() : '';
+      
+      // Extract job URL
+      const urlMatch = card.match(/<a[^>]*href="\/rc\/clk\?([^"]+)"[^>]*>/) ||
+                      card.match(/<a[^>]*href="\/pagead\/clk\?([^"]+)"[^>]*>/);
+      const jobUrl = urlMatch ? `https://www.indeed.com/rc/clk?${urlMatch[1]}` : '';
+      
+      if (title && company) {
+        jobs.push({
+          title,
+          company,
+          location: jobLocation,
+          url: jobUrl,
+          source: 'indeed'
+        });
+      }
+      
+      if (jobs.length >= 20) break;
+    }
+    
+    return jobs;
+  } catch (err) {
+    return [];
+  }
+}
+
 async function searchIndeed(companyName){
   const url = buildIndeedSearchUrl(companyName);
   try {

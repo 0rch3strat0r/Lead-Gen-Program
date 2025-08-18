@@ -5,6 +5,36 @@ import { kevinPass } from './passes/kevin.js';
 import { durinPass } from './passes/durin.js';
 import { pinkoPass } from './passes/pinko.js';
 
+export async function searchOpportunities({ keywords, location, notes } = {}) {
+  // Search Indeed for job postings matching keywords
+  const { searchJobsByKeywords } = await import('../scraper/godCode.js');
+  const jobResults = await searchJobsByKeywords({ keywords, location });
+  
+  // Extract unique companies from job results
+  const companies = [...new Set(jobResults.map(job => job.company).filter(Boolean))];
+  
+  // Research top companies found
+  const findings = [];
+  const maxCompanies = Math.min(companies.length, 5); // Limit to top 5 companies
+  
+  for (let i = 0; i < maxCompanies; i++) {
+    const companyName = companies[i];
+    try {
+      const research = await runDeepResearch({ companyName, notes });
+      findings.push({
+        company: companyName,
+        jobs: jobResults.filter(j => j.company === companyName),
+        research: research.findings
+      });
+    } catch (err) {
+      // Skip failed companies
+    }
+  }
+  
+  const summary = `Found ${companies.length} companies hiring for "${keywords}" ${location ? 'in ' + location : ''}. Analyzed top ${maxCompanies} companies.`;
+  return { jobId: `job_${Date.now()}`, model: 'opportunity-search', summary, findings, meta: { keywords, location, notes } };
+}
+
 export async function runDeepResearch({ companyName, companyUrl, notes } = {}) {
   // Prefer God Code collector if present
   let ctx;
