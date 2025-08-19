@@ -375,12 +375,252 @@ async function searchIndeedJobs(keywords, location) {
   }
 }
 
+// Search Google for job listings across all sites
+async function searchGoogle(keywords, location) {
+  const jobs = [];
+  
+  // Multiple Google search patterns to find jobs
+  const searchQueries = [
+    `site:indeed.com OR site:linkedin.com/jobs "${keywords}" "${location}"`,
+    `inurl:careers OR inurl:jobs "${keywords}" "${location}"`,
+    `"${keywords}" "${location}" "apply now" OR "job posting"`,
+    `site:greenhouse.io OR site:lever.co OR site:workday.com "${keywords}"`
+  ];
+  
+  for (const query of searchQueries.slice(0, 2)) { // Limit to avoid timeout
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+      const url = `https://www.google.com/search?q=${encodeURIComponent(query)}&num=20`;
+      const html = await fetchText(url);
+      
+      // Extract results from Google
+      const results = html.match(/<h3[^>]*>(.*?)<\/h3>/gi) || [];
+      const links = html.match(/<a[^>]*href="\/url\?q=([^"&]+)[^"]*"[^>]*>/gi) || [];
+      
+      for (let i = 0; i < Math.min(results.length, 10); i++) {
+        const titleText = results[i] ? results[i].replace(/<[^>]+>/g, '').trim() : '';
+        
+        // Try to extract company name from title or URL
+        const companyMatch = titleText.match(/at\s+([^-–—|]+)|–\s*([^-–—|]+)|\|\s*([^-–—|]+)/);
+        const company = companyMatch ? (companyMatch[1] || companyMatch[2] || companyMatch[3]).trim() : '';
+        
+        if (titleText.toLowerCase().includes(keywords.toLowerCase()) && company) {
+          jobs.push({
+            title: titleText.substring(0, 100),
+            company: company.substring(0, 50),
+            location: location || 'Not specified',
+            url: 'google.com/search',
+            source: 'google'
+          });
+        }
+      }
+    } catch {
+      // Skip failed searches
+    }
+  }
+  
+  return jobs;
+}
+
+// Search USAJobs.gov (Federal jobs - never blocks)
+async function searchUSAJobs(keywords, location) {
+  const jobs = [];
+  const locationParam = location ? `&LocationName=${encodeURIComponent(location)}` : '';
+  const url = `https://www.usajobs.gov/Search/Results?k=${encodeURIComponent(keywords)}${locationParam}`;
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const html = await fetchText(url);
+    
+    // USAJobs result cards
+    const jobCards = html.match(/<div[^>]*class="[^"]*usajobs-search-result[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi) || [];
+    
+    for (const card of jobCards.slice(0, 15)) {
+      const titleMatch = card.match(/<a[^>]*class="[^"]*usajobs-search-result-title[^"]*"[^>]*>([^<]+)<\/a>/);
+      const title = titleMatch ? titleMatch[1].trim() : '';
+      
+      const agencyMatch = card.match(/<div[^>]*class="[^"]*usajobs-search-result-agency[^"]*"[^>]*>([^<]+)<\/div>/);
+      const company = agencyMatch ? agencyMatch[1].trim() : 'Federal Government';
+      
+      const locMatch = card.match(/<div[^>]*class="[^"]*usajobs-search-result-location[^"]*"[^>]*>([^<]+)<\/div>/);
+      const jobLocation = locMatch ? locMatch[1].trim() : location || '';
+      
+      if (title && company) {
+        jobs.push({
+          title,
+          company,
+          location: jobLocation,
+          url: url,
+          source: 'usajobs'
+        });
+      }
+    }
+  } catch {
+    // Federal site might be slow but rarely fails
+  }
+  
+  return jobs;
+}
+
+// Search state job boards (example: Utah)
+async function searchStateJobs(keywords, location) {
+  const jobs = [];
+  
+  // State job board URLs (expand this list)
+  const stateBoards = [
+    { state: 'Utah', url: 'https://www.governmentjobs.com/careers/utah' },
+    { state: 'California', url: 'https://www.calcareers.ca.gov' },
+    { state: 'Texas', url: 'https://www.workintexas.com' },
+    { state: 'Colorado', url: 'https://www.governmentjobs.com/careers/colorado' }
+  ];
+  
+  // Pick relevant state based on location
+  const relevantState = stateBoards.find(s => 
+    location && location.toLowerCase().includes(s.state.toLowerCase())
+  ) || stateBoards[0];
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const searchUrl = `${relevantState.url}/jobs?keyword=${encodeURIComponent(keywords)}`;
+    const html = await fetchText(searchUrl);
+    
+    // Generic government job patterns
+    const jobTitles = html.match(/<a[^>]*class="[^"]*job-title[^"]*"[^>]*>([^<]+)<\/a>/gi) || [];
+    
+    for (const match of jobTitles.slice(0, 10)) {
+      const title = match.replace(/<[^>]+>/g, '').trim();
+      if (title) {
+        jobs.push({
+          title,
+          company: `${relevantState.state} State Government`,
+          location: location || relevantState.state,
+          url: searchUrl,
+          source: 'state-jobs'
+        });
+      }
+    }
+  } catch {
+    // Some state sites might fail
+  }
+  
+  return jobs;
+}
+
+// Search Craigslist (never blocks, has RSS)
+async function searchCraigslist(keywords, location) {
+  const jobs = [];
+  
+  // Map location to Craigslist subdomain
+  const craigslistCities = {
+    'utah': 'saltlakecity',
+    'salt lake': 'saltlakecity',
+    'denver': 'denver',
+    'phoenix': 'phoenix',
+    'vegas': 'lasvegas',
+    'portland': 'portland',
+    'seattle': 'seattle'
+  };
+  
+  const city = Object.keys(craigslistCities).find(c => 
+    location && location.toLowerCase().includes(c)
+  );
+  const subdomain = city ? craigslistCities[city] : 'saltlakecity';
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const url = `https://${subdomain}.craigslist.org/search/jjj?query=${encodeURIComponent(keywords)}`;
+    const html = await fetchText(url);
+    
+    // Craigslist result rows
+    const results = html.match(/<li[^>]*class="[^"]*result-row[^"]*"[^>]*>[\s\S]*?<\/li>/gi) || [];
+    
+    for (const row of results.slice(0, 15)) {
+      const titleMatch = row.match(/<a[^>]*class="[^"]*result-title[^"]*"[^>]*>([^<]+)<\/a>/);
+      const title = titleMatch ? titleMatch[1].trim() : '';
+      
+      // Craigslist doesn't always show company, extract from title
+      const company = title.split('-')[0].trim() || 'See listing';
+      
+      if (title) {
+        jobs.push({
+          title: title.substring(0, 100),
+          company: company.substring(0, 50),
+          location: location || subdomain,
+          url: url,
+          source: 'craigslist'
+        });
+      }
+    }
+  } catch {
+    // Craigslist is very reliable
+  }
+  
+  return jobs;
+}
+
+// Search company career pages directly via Google
+async function searchCompanyCareerPages(keywords, location) {
+  const jobs = [];
+  const query = `inurl:careers OR inurl:jobs "${keywords}" "${location}" -site:indeed.com -site:linkedin.com`;
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    const url = `https://www.google.com/search?q=${encodeURIComponent(query)}&num=30`;
+    const html = await fetchText(url);
+    
+    // Extract company domains from search results
+    const links = html.match(/<a[^>]*href="\/url\?q=https?:\/\/([^\/&"]+)[^"]*"[^>]*>/gi) || [];
+    const companies = new Set();
+    
+    for (const link of links) {
+      const domainMatch = link.match(/https?:\/\/(?:www\.)?([^\/&"]+)/);
+      if (domainMatch) {
+        const domain = domainMatch[1];
+        const companyName = domain.replace(/\.(com|org|net|io|co).*$/, '').replace(/-/g, ' ');
+        
+        if (companyName && !companies.has(companyName)) {
+          companies.add(companyName);
+          jobs.push({
+            title: `${keywords} position available`,
+            company: companyName,
+            location: location || 'Check website',
+            url: `https://${domain}/careers`,
+            source: 'company-direct'
+          });
+        }
+      }
+      
+      if (jobs.length >= 20) break;
+    }
+  } catch {
+    // Google might rate limit
+  }
+  
+  return jobs;
+}
+
 // Main function that searches ALL job boards
 export async function searchJobsByKeywords({ keywords, location } = {}) {
-  console.log(`Searching for "${keywords}" in "${location}" across multiple job boards...`);
+  console.log(`Searching for "${keywords}" in "${location}" across all sources...`);
   
-  // Search all job boards in parallel
-  const [indeedJobs, linkedinJobs, zipJobs, simplyJobs, workdayJobs] = await Promise.all([
+  // Search all sources in parallel (including ones that don't block)
+  const [
+    googleJobs,
+    usaJobs,
+    stateJobs,
+    craigslistJobs,
+    companyJobs,
+    indeedJobs,
+    linkedinJobs,
+    zipJobs,
+    simplyJobs,
+    workdayJobs
+  ] = await Promise.all([
+    searchGoogle(keywords, location),
+    searchUSAJobs(keywords, location),
+    searchStateJobs(keywords, location),
+    searchCraigslist(keywords, location),
+    searchCompanyCareerPages(keywords, location),
     searchIndeedJobs(keywords, location),
     searchLinkedIn(keywords, location),
     searchZipRecruiter(keywords, location),
@@ -390,6 +630,11 @@ export async function searchJobsByKeywords({ keywords, location } = {}) {
   
   // Combine all results
   const allJobs = [
+    ...googleJobs,
+    ...usaJobs,
+    ...stateJobs,
+    ...craigslistJobs,
+    ...companyJobs,
     ...indeedJobs,
     ...linkedinJobs,
     ...zipJobs,
@@ -408,7 +653,8 @@ export async function searchJobsByKeywords({ keywords, location } = {}) {
   const jobs = Array.from(uniqueCompanies.values());
   
   console.log(`Found ${jobs.length} unique companies across ${allJobs.length} total jobs`);
-  console.log(`Sources: Indeed(${indeedJobs.length}), LinkedIn(${linkedinJobs.length}), Zip(${zipJobs.length}), Simply(${simplyJobs.length}), Workday(${workdayJobs.length})`);
+  console.log(`Reliable sources: Google(${googleJobs.length}), USAJobs(${usaJobs.length}), State(${stateJobs.length}), Craigslist(${craigslistJobs.length}), Direct(${companyJobs.length})`);
+  console.log(`Blocked sources: Indeed(${indeedJobs.length}), LinkedIn(${linkedinJobs.length}), Zip(${zipJobs.length}), Simply(${simplyJobs.length}), Workday(${workdayJobs.length})`);
   
   return jobs.slice(0, 50); // Return top 50 to avoid overwhelming
 }
