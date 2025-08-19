@@ -179,60 +179,238 @@ function buildIndeedSearchUrl(companyName){
   return `https://www.indeed.com/jobs?q=${q}`;
 }
 
-export async function searchJobsByKeywords({ keywords, location } = {}) {
-  // Build search URL for job keywords (not company name)
+// Search LinkedIn Jobs
+async function searchLinkedIn(keywords, location) {
+  const q = encodeURIComponent(keywords);
+  const l = location ? encodeURIComponent(location) : '';
+  const url = `https://www.linkedin.com/jobs/search/?keywords=${q}&location=${l}`;
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
+    const html = await fetchText(url);
+    const jobs = [];
+    
+    // LinkedIn job cards
+    const jobCards = html.match(/<div[^>]*class="[^"]*job-search-card[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi) || [];
+    
+    for (const card of jobCards) {
+      const titleMatch = card.match(/<h3[^>]*class="[^"]*job-search-card__title[^"]*"[^>]*>([^<]+)<\/h3>/) ||
+                        card.match(/<a[^>]*class="[^"]*job-card-list__title[^"]*"[^>]*>([^<]+)<\/a>/);
+      const title = titleMatch ? titleMatch[1].trim() : '';
+      
+      const companyMatch = card.match(/<h4[^>]*class="[^"]*job-search-card__company-name[^"]*"[^>]*>([^<]+)<\/h4>/) ||
+                          card.match(/<a[^>]*class="[^"]*job-card-container__company-name[^"]*"[^>]*>([^<]+)<\/a>/);
+      const company = companyMatch ? companyMatch[1].trim() : '';
+      
+      const locationMatch = card.match(/<span[^>]*class="[^"]*job-search-card__location[^"]*"[^>]*>([^<]+)<\/span>/);
+      const jobLocation = locationMatch ? locationMatch[1].trim() : '';
+      
+      if (title && company) {
+        jobs.push({ title, company, location: jobLocation, url: url, source: 'linkedin' });
+      }
+      if (jobs.length >= 15) break;
+    }
+    return jobs;
+  } catch {
+    return [];
+  }
+}
+
+// Search ZipRecruiter
+async function searchZipRecruiter(keywords, location) {
+  const q = encodeURIComponent(keywords);
+  const l = location ? encodeURIComponent(location) : '';
+  const url = `https://www.ziprecruiter.com/jobs-search?search=${q}&location=${l}`;
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
+    const html = await fetchText(url);
+    const jobs = [];
+    
+    // ZipRecruiter job articles
+    const jobCards = html.match(/<article[^>]*class="[^"]*job_result[^"]*"[^>]*>[\s\S]*?<\/article>/gi) || [];
+    
+    for (const card of jobCards) {
+      const titleMatch = card.match(/<h2[^>]*class="[^"]*job_title[^"]*"[^>]*>([^<]+)<\/h2>/) ||
+                        card.match(/<a[^>]*class="[^"]*job_link[^"]*"[^>]*>([^<]+)<\/a>/);
+      const title = titleMatch ? titleMatch[1].trim() : '';
+      
+      const companyMatch = card.match(/<a[^>]*class="[^"]*company_name[^"]*"[^>]*>([^<]+)<\/a>/) ||
+                          card.match(/<span[^>]*class="[^"]*hiring-company[^"]*"[^>]*>([^<]+)<\/span>/);
+      const company = companyMatch ? companyMatch[1].trim() : '';
+      
+      const locationMatch = card.match(/<span[^>]*class="[^"]*location[^"]*"[^>]*>([^<]+)<\/span>/);
+      const jobLocation = locationMatch ? locationMatch[1].trim() : '';
+      
+      if (title && company) {
+        jobs.push({ title, company, location: jobLocation, url: url, source: 'ziprecruiter' });
+      }
+      if (jobs.length >= 15) break;
+    }
+    return jobs;
+  } catch {
+    return [];
+  }
+}
+
+// Search SimplyHired
+async function searchSimplyHired(keywords, location) {
+  const q = encodeURIComponent(keywords);
+  const l = location ? encodeURIComponent(location) : '';
+  const url = `https://www.simplyhired.com/search?q=${q}&l=${l}`;
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
+    const html = await fetchText(url);
+    const jobs = [];
+    
+    // SimplyHired job cards
+    const jobCards = html.match(/<div[^>]*class="[^"]*SerpJob[^"]*"[^>]*>[\s\S]*?<\/article>/gi) || [];
+    
+    for (const card of jobCards) {
+      const titleMatch = card.match(/<h2[^>]*class="[^"]*jobposting-title[^"]*"[^>]*>([^<]+)<\/h2>/) ||
+                        card.match(/data-job-title="([^"]+)"/);
+      const title = titleMatch ? titleMatch[1].trim() : '';
+      
+      const companyMatch = card.match(/<span[^>]*class="[^"]*jobposting-company[^"]*"[^>]*>([^<]+)<\/span>/) ||
+                          card.match(/data-company="([^"]+)"/);
+      const company = companyMatch ? companyMatch[1].trim() : '';
+      
+      const locationMatch = card.match(/<span[^>]*class="[^"]*jobposting-location[^"]*"[^>]*>([^<]+)<\/span>/);
+      const jobLocation = locationMatch ? locationMatch[1].trim() : '';
+      
+      if (title && company) {
+        jobs.push({ title, company, location: jobLocation, url: url, source: 'simplyhired' });
+      }
+      if (jobs.length >= 15) break;
+    }
+    return jobs;
+  } catch {
+    return [];
+  }
+}
+
+// Search multiple Workday sites (major companies use Workday)
+async function searchWorkday(keywords, location) {
+  const jobs = [];
+  // Major companies that use Workday for job postings
+  const workdaySites = [
+    'https://amazon.jobs',
+    'https://jobs.apple.com',
+    'https://careers.google.com',
+    'https://careers.microsoft.com',
+    'https://www.metacareers.com'
+  ];
+  
+  for (const site of workdaySites.slice(0, 2)) { // Limit to avoid timeout
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
+      const searchUrl = `${site}/search?q=${encodeURIComponent(keywords)}`;
+      const html = await fetchText(searchUrl);
+      
+      // Generic job posting patterns
+      const jobMatches = html.match(/<a[^>]*href="[^"]*job[^"]*"[^>]*>(.*?)<\/a>/gi) || [];
+      const companyName = site.replace('https://', '').replace('.jobs', '').replace('careers.', '').replace('.com', '');
+      
+      for (const match of jobMatches.slice(0, 5)) {
+        const title = match.replace(/<[^>]+>/g, '').trim();
+        if (title && title.length > 5 && title.length < 100) {
+          jobs.push({ 
+            title, 
+            company: companyName, 
+            location: location || 'Remote', 
+            url: site, 
+            source: 'workday' 
+          });
+        }
+      }
+    } catch {
+      // Skip failed sites
+    }
+  }
+  return jobs;
+}
+
+// Search Indeed (existing function improved)
+async function searchIndeedJobs(keywords, location) {
   const q = encodeURIComponent(keywords);
   const l = location ? `&l=${encodeURIComponent(location)}` : '';
   const url = `https://www.indeed.com/jobs?q=${q}${l}`;
   
   try {
-    // Extra delay before Indeed search (2-4 seconds total)
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-    
+    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
     const html = await fetchText(url);
     const jobs = [];
     
-    // Extract job cards with company names
-    const jobCards = html.match(/<div[^>]*class="[^"]*job_seen_beacon[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/gi) || [];
+    // Multiple patterns for Indeed's changing HTML
+    const jobCards = html.match(/<div[^>]*class="[^"]*job_seen_beacon[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/gi) ||
+                    html.match(/<div[^>]*class="[^"]*jobsearch-SerpJobCard[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi) ||
+                    html.match(/<div[^>]*data-jk="[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi) || [];
     
     for (const card of jobCards) {
-      // Extract job title
-      const titleMatch = card.match(/<span[^>]*title="([^"]+)"[^>]*>/);
-      const title = titleMatch ? titleMatch[1] : '';
+      const titleMatch = card.match(/<span[^>]*title="([^"]+)"[^>]*>/) ||
+                        card.match(/<h2[^>]*class="[^"]*title[^"]*"[^>]*>.*?<a[^>]*>([^<]+)<\/a>/) ||
+                        card.match(/<a[^>]*class="[^"]*jobtitle[^"]*"[^>]*>([^<]+)<\/a>/);
+      const title = titleMatch ? (titleMatch[1] || titleMatch[2]).trim() : '';
       
-      // Extract company name - this is key!
       const companyMatch = card.match(/<a[^>]*data-testid="company-name"[^>]*>([^<]+)<\/a>/) ||
-                           card.match(/<div[^>]*data-testid="company-name"[^>]*>([^<]+)<\/div>/) ||
-                           card.match(/<span[^>]*class="[^"]*companyName[^"]*"[^>]*>([^<]+)<\/span>/);
+                          card.match(/<div[^>]*data-testid="company-name"[^>]*>([^<]+)<\/div>/) ||
+                          card.match(/<span[^>]*class="[^"]*companyName[^"]*"[^>]*>([^<]+)<\/span>/) ||
+                          card.match(/<span[^>]*class="[^"]*company[^"]*"[^>]*>([^<]+)<\/span>/);
       const company = companyMatch ? companyMatch[1].trim() : '';
       
-      // Extract location
       const locationMatch = card.match(/<div[^>]*data-testid="job-location"[^>]*>([^<]+)<\/div>/) ||
-                           card.match(/<div[^>]*class="[^"]*locationsContainer[^"]*"[^>]*>([^<]+)<\/div>/);
+                           card.match(/<div[^>]*class="[^"]*locationsContainer[^"]*"[^>]*>([^<]+)<\/div>/) ||
+                           card.match(/<span[^>]*class="[^"]*location[^"]*"[^>]*>([^<]+)<\/span>/);
       const jobLocation = locationMatch ? locationMatch[1].trim() : '';
       
-      // Extract job URL
-      const urlMatch = card.match(/<a[^>]*href="\/rc\/clk\?([^"]+)"[^>]*>/) ||
-                      card.match(/<a[^>]*href="\/pagead\/clk\?([^"]+)"[^>]*>/);
-      const jobUrl = urlMatch ? `https://www.indeed.com/rc/clk?${urlMatch[1]}` : '';
-      
       if (title && company) {
-        jobs.push({
-          title,
-          company,
-          location: jobLocation,
-          url: jobUrl,
-          source: 'indeed'
-        });
+        jobs.push({ title, company, location: jobLocation, url: url, source: 'indeed' });
       }
-      
       if (jobs.length >= 20) break;
     }
-    
     return jobs;
-  } catch (err) {
+  } catch {
     return [];
   }
+}
+
+// Main function that searches ALL job boards
+export async function searchJobsByKeywords({ keywords, location } = {}) {
+  console.log(`Searching for "${keywords}" in "${location}" across multiple job boards...`);
+  
+  // Search all job boards in parallel
+  const [indeedJobs, linkedinJobs, zipJobs, simplyJobs, workdayJobs] = await Promise.all([
+    searchIndeedJobs(keywords, location),
+    searchLinkedIn(keywords, location),
+    searchZipRecruiter(keywords, location),
+    searchSimplyHired(keywords, location),
+    searchWorkday(keywords, location)
+  ]);
+  
+  // Combine all results
+  const allJobs = [
+    ...indeedJobs,
+    ...linkedinJobs,
+    ...zipJobs,
+    ...simplyJobs,
+    ...workdayJobs
+  ];
+  
+  // Deduplicate by company name
+  const uniqueCompanies = new Map();
+  for (const job of allJobs) {
+    if (!uniqueCompanies.has(job.company)) {
+      uniqueCompanies.set(job.company, job);
+    }
+  }
+  
+  const jobs = Array.from(uniqueCompanies.values());
+  
+  console.log(`Found ${jobs.length} unique companies across ${allJobs.length} total jobs`);
+  console.log(`Sources: Indeed(${indeedJobs.length}), LinkedIn(${linkedinJobs.length}), Zip(${zipJobs.length}), Simply(${simplyJobs.length}), Workday(${workdayJobs.length})`);
+  
+  return jobs.slice(0, 50); // Return top 50 to avoid overwhelming
 }
 
 async function searchIndeed(companyName){
