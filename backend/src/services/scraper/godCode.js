@@ -83,7 +83,22 @@ function normalizeHomepage(homepageUrl, domain){
 }
 
 async function fetchText(url) {
-  const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 LeadGenBot/1.0' } });
+  // Add random delay to seem human (1-3 seconds)
+  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+  
+  const r = await fetch(url, { 
+    headers: { 
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'accept-language': 'en-US,en;q=0.9',
+      'accept-encoding': 'gzip, deflate, br',
+      'upgrade-insecure-requests': '1',
+      'sec-fetch-dest': 'document',
+      'sec-fetch-mode': 'navigate',
+      'sec-fetch-site': 'none',
+      'cache-control': 'max-age=0'
+    } 
+  });
   if (!r.ok) throw new Error(`fetch ${url} ${r.status}`);
   const ct = r.headers.get('content-type') || '';
   if (!ct.includes('text/html') && !ct.includes('xml')) throw new Error(`skip non-html ${url}`);
@@ -171,6 +186,9 @@ export async function searchJobsByKeywords({ keywords, location } = {}) {
   const url = `https://www.indeed.com/jobs?q=${q}${l}`;
   
   try {
+    // Extra delay before Indeed search (2-4 seconds total)
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+    
     const html = await fetchText(url);
     const jobs = [];
     
